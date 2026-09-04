@@ -2,4 +2,4 @@ const validator = ()=>{
 
 }
 
-module
+module.exports = validator;
