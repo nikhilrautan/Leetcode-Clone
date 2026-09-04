@@ -1,5 +1,6 @@
 const User = require("../models/user");
 const validate= require('../utils/validator');
+const bcrypt = require("bcrypt");
 const register= async(req,res)=>{
     try{
         //validate the data
