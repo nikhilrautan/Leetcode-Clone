@@ -1,5 +1,5 @@
 const User = require("../models/user");
-const validator= require('../utils/validator');
+const validator= require('../utils/validate');
 const register= async(req,res)=>{
     try{
         //validate the data
