@@ -12,6 +12,7 @@ const register = async(req,res)=>{
         req.body.password = await bcrypt.hash(password, 10);
     
        const token =  jwt.sign({emailId},process.env.JWT_KEY,{expiresIn: 60*60});
+       res.cookie('token', token , {maxAge: 60*60*1000});
        const user = await User.create(req.body);
     }  
     catch(err){
