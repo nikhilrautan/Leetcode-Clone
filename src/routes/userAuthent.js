@@ -11,11 +11,24 @@ const register = async(req,res)=>{
        
         req.body.password = await bcrypt.hash(password, 10);
     
-       const token =  jwt.sign({emailId},process.env.JWT_KEY,{expiresIn: 60*60});
-       res.cookie('token', token , {maxAge: 60*60*1000});
+
        const user = await User.create(req.body);
+       const token =  jwt.sign({_id:user._id ,emailId: emailId},process.env.JWT_KEY,{expiresIn: 60*60});
+       res.cookie('token', token , {maxAge: 60*60*1000});
+       res.status(201).send("User Registered Successfully");
     }  
     catch(err){
       res.status(400).send("Error: "+ err);
     }
+}
+
+const login = async (req,res)=>{
+  try{
+    const {emailId, password} = req.body;
+
+    if(!emailId)
+      throw new Error("Invalid Credentials");
+    if(!password)
+      throw new Error("Invalid Credntials");
+  }
 }
