@@ -30,5 +30,19 @@ const login = async (req,res)=>{
       throw new Error("Invalid Credentials");
     if(!password)
       throw new Error("Invalid Credntials");
+
+    const user = await User.findOne({emailId});
+
+    const match = bcrypt.compare(password, req.body);
+
+     if(!match)
+      throw new Error("Invalid Credntials");
+    
+      const token =  jwt.sign({_id:user._id ,emailId: emailId},process.env.JWT_KEY,{expiresIn: 60*60});
+       res.cookie('token', token , {maxAge: 60*60*1000});
+       res.status(200).send("Logged in Successfully");
+  }
+  catch(err){
+    res.status().send("Error: "+err);
   }
 }
