@@ -6,14 +6,14 @@ const userSchema = new Schema({
         type: String,
         required: true,
         minLength:3,
-        maxLength: 20
+        maxLength: 20,
     },
     lastName:{
         type: String,
         minLength:3,
         maxLength: 20,
     },
-    emailID:{
+    emailId:{
         type:String,
         required: true,
         unique: true,
@@ -32,7 +32,7 @@ const userSchema = new Schema({
         default:'user'
     },
     problemSolved:{
-        type :[string]
+        type :[String]
     },
     password:{
         type:String,

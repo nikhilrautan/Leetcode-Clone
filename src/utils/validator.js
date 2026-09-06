@@ -8,7 +8,7 @@ const validate = (data)=>{
     if(!IsAllowed)
         throw new Error("Field Missing");
 
-    if(validator.isEmail(data.emailId))
+    if(!validator.isEmail(data.emailId))
         throw new Error("Invalid Email");
 
     if(!validator.isStrongPassword(data.password))
