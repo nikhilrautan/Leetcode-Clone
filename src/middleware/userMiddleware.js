@@ -19,5 +19,6 @@ const userMiddleware = async (req,res,next)=>{
         throw new Error("User Doesn't Exist");
        }
    
+       // wo user : Redis k blocklist m present to nhi hai? 
     }
 }
