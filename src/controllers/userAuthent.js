@@ -21,6 +21,8 @@ const register = async (req, res) => {
     }
 }
 
+// logout feature
+
 const login = async (req, res) => {
     try {
         const { emailId, password } = req.body;
