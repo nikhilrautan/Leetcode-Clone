@@ -42,6 +42,8 @@ const login = async (req, res) => {
     }
 }
 
+// logout feature
+
 const logout = async (req, res) => {
     try {
         res.cookie('token', null, { expires: new Date(Date.now()) });
@@ -51,6 +53,8 @@ const logout = async (req, res) => {
         res.status(400).send("Error: " + err);
     }
 }
+
+// getProfile feature
 
 const getProfile = async (req, res) => {
     try {
