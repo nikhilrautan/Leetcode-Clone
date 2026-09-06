@@ -20,5 +20,15 @@ const userMiddleware = async (req,res,next)=>{
        }
    
        // wo user : Redis k blocklist m present to nhi hai? 
+       const IsBlocked = await redisClient.exists(`token:${token}`);
+
+       if(IsBlocked)
+        throw new Error("Invalid Token");
+    req.result = result;
+    next();
+
+    }
+    catch(err){
+        res.send("Error: "+ err.message)
     }
 }
