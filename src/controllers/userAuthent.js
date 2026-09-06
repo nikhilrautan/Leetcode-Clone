@@ -49,6 +49,7 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
     try {
+      // validate the token 
         res.cookie('token', null, { expires: new Date(Date.now()) });
         res.status(200).send("Logged Out Successfully");
     }
