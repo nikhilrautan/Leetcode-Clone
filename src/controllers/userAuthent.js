@@ -21,7 +21,7 @@ const register = async (req, res) => {
     }
 }
 
-// logout feature
+// login feature
 
 const login = async (req, res) => {
     try {
