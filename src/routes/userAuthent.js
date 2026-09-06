@@ -33,11 +33,11 @@ const login = async (req,res)=>{
 
     const user = await User.findOne({emailId});
 
-    const match = bcrypt.compare(password, req.body);
+    const match = bcrypt.compare(password, user.password);
 
      if(!match)
       throw new Error("Invalid Credntials");
-    
+
       const token =  jwt.sign({_id:user._id ,emailId: emailId},process.env.JWT_KEY,{expiresIn: 60*60});
        res.cookie('token', token , {maxAge: 60*60*1000});
        res.status(200).send("Logged in Successfully");
@@ -45,4 +45,16 @@ const login = async (req,res)=>{
   catch(err){
     res.status().send("Error: "+err);
   }
+}
+
+// log out 
+
+const logout = async(req,res)=>{
+    try{
+
+    }
+    catch(err){
+      
+    }
+
 }
