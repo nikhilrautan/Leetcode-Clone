@@ -8,16 +8,26 @@ const main = require('./config/db');
 const cookieparser = require('cookie-parser');
 
 const userAuth = require("./routes/userAuth");
+const { clientEncryption } = require('./models/user');
+const redisClient  = require('./config/redis');
 
 app.use(express.json());
 app.use(cookieparser());
 
 app.use('/user', userAuth);
 
-main()
-.then(async ()=>{
-    app.listen(process.env.PORT,()=>{
-    console.log("Server Listening at port number: "+ process.env.PORT);
-   })
-})
-.catch(err=> console.log("Error Occurred: "+ err));
+const InitalizeConnection = async ()=>{
+
+    try{
+        await Promise.all([main(),redisClient.connect()]);
+        console.log("DB Connected");
+        app.listen(process.env.PORT,()=>{
+        console.log("Server Listening at port number: "+ process.env.PORT);
+    })
+    }
+    catch(err){
+       console.log("Error: "+ err);
+    }
+}
+
+InitalizeConnection();

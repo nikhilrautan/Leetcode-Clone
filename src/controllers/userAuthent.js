@@ -1,3 +1,4 @@
+const redisClient = require("../config/redis");
 const User = require("../models/user");
 const validate = require('../utils/validator');
 const bcrypt = require("bcrypt");
@@ -50,8 +51,16 @@ const login = async (req, res) => {
 const logout = async (req, res) => {
     try {
       // validate the token 
-        res.cookie('token', null, { expires: new Date(Date.now()) });
-        res.status(200).send("Logged Out Successfully");
+      const {token} = req.cookies; // token nikaal diya 
+      // ab payload lo nikalo 
+      const payload = jwt.decode(token);
+      // ab usko redis k blockist m daalna hai
+      await redisClient.set(`token:${token}`,'Blocked');
+      await redisClient.expireAt(`token:${token}`,payload.exp);
+
+      // Cookies ko clear kr dena....
+        res.cookie("token",null, new Date(Date.now()));
+        res.send(200).send("Logged Out Successfully");
     }
     catch (err) {
         res.status(400).send("Error: " + err);

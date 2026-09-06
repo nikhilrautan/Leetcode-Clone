@@ -9,4 +9,4 @@ const redisClient = createClient({
     }
 });
 
-module.exports = redisClients;
+module.exports = redisClient;
