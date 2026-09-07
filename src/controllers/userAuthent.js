@@ -67,6 +67,7 @@ const logout = async (req, res) => {
     }
 }
 
+
 // getProfile feature
 
 const getProfile = async (req, res) => {
