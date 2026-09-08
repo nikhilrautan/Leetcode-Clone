@@ -95,7 +95,7 @@ const adminRegister = async (req,res)=>{
         req.body.role = 'admin'; 
 
         const user = await User.create(req.body);
-        const token = jwt.sign({ _id: user._id, emailId: emailId , role:user.role}, process.env.JWT_KEY, { expiresIn: 60 * 60 });
+        const token = jwt.sign({ _id: user._id, emailId: emailId , role:'admin'}, process.env.JWT_KEY, { expiresIn: 60 * 60 });
         res.cookie('token', token, { maxAge: 60 * 60 * 1000 });
         res.status(201).send("User Registered Successfully");
     }
@@ -104,4 +104,4 @@ const adminRegister = async (req,res)=>{
     }
 
 }
-module.exports = { register, login, logout, getProfile };
+module.exports = { register, login, logout, getProfile ,adminRegister};
