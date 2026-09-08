@@ -62,5 +62,8 @@ const problemSchema = new Schema({
         }
     ],
     problemCreator:{
-        type:
+        type:Schema.Types.ObjectId,
+        ref:'user',
+        required: true,
     }
+})
