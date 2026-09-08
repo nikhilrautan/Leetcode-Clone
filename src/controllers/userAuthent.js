@@ -11,7 +11,7 @@ const register = async (req, res) => {
         const { firstName, emailId, password } = req.body;
 
         req.body.password = await bcrypt.hash(password, 10);
-        req.body.role = 'user';
+        req.body.role = 'user'; // ye kr k ab agr koi bhi login hoga to as a user hi hoga admin k liye hum alag se route bnaenge login krne k liye(kyuki bina iske koi bhi as a admin ghus skta hai )
 
         const user = await User.create(req.body);
         const token = jwt.sign({ _id: user._id, emailId: emailId }, process.env.JWT_KEY, { expiresIn: 60 * 60 });
