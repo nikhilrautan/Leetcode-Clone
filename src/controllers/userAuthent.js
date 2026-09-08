@@ -88,6 +88,11 @@ const getProfile = async (req, res) => {
 
 const adminRegister = async (req,res)=>{
     try {
+
+        // // validate the data
+        // if(req.result.role!= 'admin')
+        //     throw new Error("Invalid Credentials");
+
         validate(req.body);
         const { firstName, emailId, password } = req.body;
 
