@@ -1,9 +1,10 @@
 const express = require('express');
 
 const problemRouter = express.Router();
+const adminMiddleware = require("../middleware/adminMiddleware")
 
 // Create
-problemRouter.post("/Create",createProblem);
+problemRouter.post("/Create",adminMiddleware,createProblem);
 problemRouter.patch("/:id",updateProblem);
 problemRouter.delete("/:id",deleteProblem);
 
