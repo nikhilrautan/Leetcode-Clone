@@ -61,7 +61,7 @@ const problemSchema = new Schema({
             }
         }
     ],
-    refrenceSolution:[
+    referenceSolution:[
         {
             language:{
                 type: String,
@@ -84,3 +84,19 @@ const problemSchema = new Schema({
 const Problem = mongoose.model('problem',problemSchema);
 
 module.exports = Problem;
+
+
+const referenceSolution = [
+    {
+        language:"C++",
+        completeCode:"C++ Code"
+    },
+    {
+        language:"JS",
+        completeCode:"JS Code"
+    },
+    {
+        language:"Java",
+        completeCode:"Java Code"
+    },
+]
