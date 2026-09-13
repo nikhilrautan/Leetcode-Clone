@@ -8,10 +8,6 @@ const createProblem = async (req,res)=>{
 
 try{
     for(const {language, completeCode} of referenceSolution){
-   // source_code:
-   //language_id:
-   //stdin:
-   //expectedOutput:
 
    const language_id = getLanguageById(language);
     }
