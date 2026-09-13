@@ -11,7 +11,15 @@ try{
     for(const {language, completeCode} of referenceSolution){
 
    const language_id = getLanguageById(language);
-    }
+
+   const submissions = visibletestCases.map((input, output)=>({
+     source_code:completeCode,
+     language_id: languageId,
+     stdin: input,
+     expected_output: output,
+   }));
+   
+  }
 }
     catch(err){
 
