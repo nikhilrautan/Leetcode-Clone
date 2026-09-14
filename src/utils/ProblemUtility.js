@@ -37,8 +37,17 @@ async function fetchData() {
   }
 }
 
-return await fetchData();
+return await fetchData(); // array k format m token laakr dega
 
+// 2 step m hota hai , 
+//phle hum jo result ko submit maarte hai to judge0 hume token laake de deta hai aur fir vhi 
+// tokens se get request maarenge aur actual result fetch kr lenge..
+
+
+// status_id:
+//1: Queue
+//2: Process
+//3: Accepted
 }
 
 module.exports = {getLanguageById, submitBatch};
