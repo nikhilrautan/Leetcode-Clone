@@ -39,6 +39,7 @@ async function fetchData() {
 
 fetchData();
 }
+
 module.exports = {getLanguageById, submitBatch};
 
 
