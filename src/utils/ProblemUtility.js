@@ -1,58 +1,76 @@
 const axios = require('axios');
 
-const getLanguageById = (lang)=>{
-    const language ={
-        "c++":54,
-        "java":62,
-        "javascript":63,
-
+const getLanguageById = (lang) => {
+    const language = {
+        "c++": 54,
+        "java": 62,
+        "javascript": 63,
     }
-    return language[lang.tolowerCase()];
+    return language[lang.toLowerCase()]; // fixed: toLowerCase (capital L)
 }
 
-const submitBatch = async (submissions)=>{
-
+const submitBatch = async (submissions) => {
 
     const options = {
-  method: 'POST',
-  url: 'https://ce.judge0.com/submissions/batch',
-  params: {
-    base64_encoded: 'true'
-  },
-  headers: {
-    'Content-Type': 'application/json'
-    // no x-rapidapi-key or x-rapidapi-host needed — ce.judge0.com is open
-  },
-  data: {
-    submissions
-  }
-};
+        method: 'POST',
+        url: 'https://ce.judge0.com/submissions/batch',
+        params: {
+            base64_encoded: 'true'
+        },
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        data: {
+            submissions
+        }
+    };
 
-async function fetchData() {
-  try {
-    const response = await axios.request(options);
-    return response.data;
-  } catch (error) {
-    console.error(error);
-  }
+    async function fetchData() {
+        try {
+            const response = await axios.request(options);
+            return response.data;
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    return await fetchData(); // array of tokens
+
+    // 2 step process:
+    // 1. submit code -> judge0 gives us tokens back
+    // 2. use those tokens to GET the actual result
+
+    // status_id:
+    // 1: Queue
+    // 2: Process
+    // 3: Accepted
 }
 
-return await fetchData(); // array k format m token laakr dega
+const submitToken = async (resultToken) => {
 
-// 2 step m hota hai , 
-//phle hum jo result ko submit maarte hai to judge0 hume token laake de deta hai aur fir vhi 
-// tokens se get request maarenge aur actual result fetch kr lenge..
+    const options = {
+        method: 'GET',
+        url: 'https://ce.judge0.com/submissions/batch',
+        params: {
+            tokens: resultToken.join(','), // resultToken is an array -> comma-separated string
+            base64_encoded: 'true',
+            fields: '*'
+        },
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    };
 
+    async function fetchData() {
+        try {
+            const response = await axios.request(options);
+            return response.data;
+        } catch (error) {
+            console.error(error);
+        }
+    }
 
-// jitne Batches honge utne token return krega
-// status_id:
-//1: Queue
-//2: Process
-//3: Accepted
+    return await fetchData(); // returns actual results (stdout, status, etc.)
 }
 
-const submitToken = async(resultToken)=>{
-  
-}
-
-module.exports = {getLanguageById, submitBatch, submitToken};
+module.exports = { getLanguageById, submitBatch, submitToken };
