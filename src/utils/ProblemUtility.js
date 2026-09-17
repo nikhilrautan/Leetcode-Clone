@@ -51,4 +51,8 @@ return await fetchData(); // array k format m token laakr dega
 //3: Accepted
 }
 
-module.exports = {getLanguageById, submitBatch};
+const submitToken = async(resultToken)=>{
+  
+}
+
+module.exports = {getLanguageById, submitBatch, submitToken};
