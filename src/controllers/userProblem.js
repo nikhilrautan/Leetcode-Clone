@@ -25,7 +25,7 @@ try{
    const resultToken = submitResult.map((value)=> value.token); // ek array bnaega jisme sirf tokens rkhe honge
   }
 
-  
+
   submitToken
 }
     catch(err){
