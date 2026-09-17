@@ -13,15 +13,18 @@ try{
    const language_id = getLanguageById(language);
 
    // I am Creating Batch Submission
-   const submissions = visibletestCases.map((input, output)=>({
+   const submissions = visibletestCases.map((testcase)=>({
      source_code:completeCode,
      language_id: languageId,
-     stdin: input,
-     expected_output: output,
+     stdin: testcase.input,
+     expected_output: testcase.output,
    }));
  
    const submitResult = await subitBatch(submissions);
+
+   const resultToken = submitResult.map((value)=> value.token); // ek array bnaega jisme sirf tokens rkhe honge
   }
+  submitToken
 }
     catch(err){
 
