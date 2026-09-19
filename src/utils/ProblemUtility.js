@@ -60,8 +60,7 @@ const submitToken = async (resultToken) => {
             'Content-Type': 'application/json'
         }
     };
- 
-    
+   
     async function fetchData() {
         try {
             const response = await axios.request(options);
