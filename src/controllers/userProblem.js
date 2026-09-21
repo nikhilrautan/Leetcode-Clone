@@ -37,7 +37,7 @@ const createProblem = async (req, res) => {
         const userProblem = await Problem.create({
             ...req.body,
             problemCreator: req.result._id
-        })
+        });
 
         // All reference solutions passed all visible test cases — safe to save
         // const userProblem = await Problem.create({
