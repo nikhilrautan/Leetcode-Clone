@@ -39,7 +39,9 @@ const createProblem = async (req, res) => {
         //     ...req.body
         // });
 
+        // now all the things are correct we can store this in DB
         res.status(201).send("Problem Created Successfully");
+
 
     } catch (err) {
         console.error(err);
