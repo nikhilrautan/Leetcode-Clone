@@ -1,5 +1,5 @@
 const { getLanguageById, submitBatch, submitToken } = require("../utils/ProblemUtility");
-// const Problem = require("../models/problem"); // uncomment if you're saving to DB
+const Problem = require("../models/problem")
 
 const createProblem = async (req, res) => {
     const {
@@ -34,9 +34,9 @@ const createProblem = async (req, res) => {
             }
         }
 
-        await Problem.create({
+        const userProblem = await Problem.create({
             ...req.body,
-            problemCreator:
+            problemCreator: req.result._id
         })
 
         // All reference solutions passed all visible test cases — safe to save
