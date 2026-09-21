@@ -1,38 +1,50 @@
-const {getLanguageById , submitBatch}= require("../utils/ProblemUtility");
+const { getLanguageById, submitBatch, submitToken } = require("../utils/ProblemUtility");
+// const Problem = require("../models/problem"); // uncomment if you're saving to DB
 
-const createProblem = async (req,res)=>{
-    const {title,description, difficulty, tags, 
-        visibletestCases, hiddenTestCases,startCode,
-        referenceSolution,problemCreator
+const createProblem = async (req, res) => {
+    const {
+        title, description, difficulty, tags,
+        visibletestCases, hiddenTestCases, startCode,
+        referenceSolution, problemCreator
     } = req.body;
-}
 
-try{
-    for(const {language, completeCode} of referenceSolution){
+    try {
+        for (const { language, completeCode } of referenceSolution) {
 
-   const language_id = getLanguageById(language);
+            const language_id = getLanguageById(language);
 
-   // I am Creating Batch Submission
-   const submissions = visibletestCases.map((testcase)=>({
-     source_code:completeCode,
-     language_id: languageId,
-     stdin: testcase.input,
-     expected_output: testcase.output,
-   }));
- 
-   const submitResult = await subitBatch(submissions);
+            // Creating Batch Submission
+            const submissions = visibletestCases.map((testcase) => ({
+                source_code: completeCode,
+                language_id: language_id,
+                stdin: testcase.input,
+                expected_output: testcase.output,
+            }));
 
-   const resultToken = submitResult.map((value)=> value.token); // ek array bnaega jisme sirf tokens rkhe honge
-  }
+            const submitResult = await submitBatch(submissions);
 
-   const testResult = await submitToken(resultToken)
-   for(const test of testResult){
-    if(testResult.status_id!=3){
-        return res.status(400).send("Error Occured");
+            const resultToken = submitResult.map((value) => value.token); // array of tokens
+
+            const testResult = await submitToken(resultToken);
+
+            for (const test of testResult) {
+                if (test.status_id != 3) {
+                    return res.status(400).send("Error Occurred: Reference solution failed on visible test cases");
+                }
+            }
+        }
+
+        // All reference solutions passed all visible test cases — safe to save
+        // const userProblem = await Problem.create({
+        //     ...req.body
+        // });
+
+        res.status(201).send("Problem Created Successfully");
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error: " + err.message);
     }
-   }
-}
-    catch(err){
+};
 
-    }
-
+module.exports = { createProblem };
