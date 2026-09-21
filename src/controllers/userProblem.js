@@ -43,7 +43,6 @@ const createProblem = async (req, res) => {
         // const userProblem = await Problem.create({
         //     ...req.body
         // });
-
         // now all the things are correct we can store this in DB
         res.status(201).send("Problem Created Successfully");
 
