@@ -25,8 +25,14 @@ try{
    const resultToken = submitResult.map((value)=> value.token); // ek array bnaega jisme sirf tokens rkhe honge
   }
 
-   const testResult = await submitToken(resultToken);
+   const testResult = await submitToken(resultToken)
+   for(const test of testResult){
+    if(testResult.status_id!=3){
+        return res.status(400).send("Error Occured");
+    }
+   }
 }
     catch(err){
 
     }
+

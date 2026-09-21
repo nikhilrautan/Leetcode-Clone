@@ -1,16 +1,33 @@
 const axios = require('axios');
 
+// Maps language name -> Judge0 language ID
 const getLanguageById = (lang) => {
     const language = {
+        "c": 50,
         "c++": 54,
         "java": 62,
         "javascript": 63,
-    }
-    return language[lang.toLowerCase()]; // fixed: toLowerCase (capital L)
-}
+        "python": 71,
+        "python3": 71,
+        "c#": 51,
+        "go": 60,
+        "typescript": 74,
+        "ruby": 72,
+        "php": 68,
+        "rust": 73,
+        "kotlin": 78,
+        "swift": 83,
+    };
+    const id = language[lang.toLowerCase()];
+    if (!id) throw new Error(`Unsupported language: ${lang}`);
+    return id;
+};
 
+// Simple delay helper for polling
+const waiting = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Step 1: Submit a batch of code submissions -> returns array of tokens
 const submitBatch = async (submissions) => {
-
     const options = {
         method: 'POST',
         url: 'https://ce.judge0.com/submissions/batch',
@@ -25,34 +42,28 @@ const submitBatch = async (submissions) => {
         }
     };
 
-    async function fetchData() {
-        try {
-            const response = await axios.request(options);
-            return response.data;
-        } catch (error) {
-            console.error(error);
-        }
+    try {
+        const response = await axios.request(options);
+        return response.data; // array of { token }
+    } catch (error) {
+        console.error('submitBatch error:', error?.response?.data || error.message);
+        throw error;
     }
 
-    return await fetchData(); // array of tokens
-
-    // 2 step process:
-    // 1. submit code -> judge0 gives us tokens back
-    // 2. use those tokens to GET the actual result
-
-    // status_id:
-    // 1: Queue
-    // 2: Process
+    // status_id reference:
+    // 1: In Queue
+    // 2: Processing
     // 3: Accepted
-}
+    // 4+: Wrong Answer / Compilation Error / Runtime Error / TLE etc.
+};
 
-const submitToken = async (resultToken) => {
-
+// Step 2: Poll using tokens until all submissions finish -> returns final results
+const submitToken = async (resultToken, maxRetries = 15) => {
     const options = {
         method: 'GET',
         url: 'https://ce.judge0.com/submissions/batch',
         params: {
-            tokens: resultToken.join(','), // resultToken is an array -> comma-separated string
+            tokens: resultToken.join(','),
             base64_encoded: 'true',
             fields: '*'
         },
@@ -60,17 +71,35 @@ const submitToken = async (resultToken) => {
             'Content-Type': 'application/json'
         }
     };
-   
-    async function fetchData() {
+
+    const fetchData = async () => {
         try {
             const response = await axios.request(options);
             return response.data;
         } catch (error) {
-            console.error(error);
+            console.error('submitToken error:', error?.response?.data || error.message);
+            throw error;
         }
-    }
+    };
 
-    return await fetchData(); // returns actual results (stdout, status, etc.)
-}
+    let attempts = 0;
+
+    while (true) {
+        const result = await fetchData();
+
+        const isResultObtained = result.submissions.every((r) => r.status_id > 2);
+
+        if (isResultObtained) {
+            return result.submissions;
+        }
+
+        attempts++;
+        if (attempts >= maxRetries) {
+            throw new Error('Judge0 polling timed out — submission took too long to process.');
+        }
+
+        await waiting(1000);
+    }
+};
 
 module.exports = { getLanguageById, submitBatch, submitToken };
