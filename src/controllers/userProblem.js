@@ -34,6 +34,11 @@ const createProblem = async (req, res) => {
             }
         }
 
+        await Problem.create({
+            ...req.body,
+            problemCreator:
+        })
+
         // All reference solutions passed all visible test cases — safe to save
         // const userProblem = await Problem.create({
         //     ...req.body
