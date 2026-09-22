@@ -8,10 +8,10 @@ const { createProblem } = require("../controllers/userProblem");
 problemRouter.post("/Create", adminMiddleware, createProblem);
 
 // TODO: implement these in controllers/userProblem.js, then uncomment
-// problemRouter.patch("/:id", updateProblem);
-// problemRouter.delete("/:id", deleteProblem);
-// problemRouter.get("/:id", getProblemById);
-// problemRouter.get("/", getAllProblem);
-// problemRouter.get("/user", solvedAllProblembuuUser);
+problemRouter.patch("/update/:id", updateProblem);
+problemRouter.delete("/delete/:id", deleteProblem);
+problemRouter.get("/ProblemById/:id", getProblemById);
+problemRouter.get("/getAllProblem", getAllProblem);
+problemRouter.get("/ProblemSolvedByUser", solvedAllProblembuuUser);
 
 module.exports = problemRouter;
