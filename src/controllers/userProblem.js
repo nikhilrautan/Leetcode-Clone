@@ -102,7 +102,7 @@ const updateProblem = async(req,res)=>{
        res.status(200).send(newProblem);
     }
     catch(err){
-     res.status(404).send("Error: "+err); 
+     res.status(500).send("Error: "+err); 
     }
 
 }
@@ -125,4 +125,41 @@ const deleteProblem = async(req,res)=>{
       res.status(500).send("Error: "+err);
     }
 }
-module.exports = { createProblem,updateProblem,deleteProblem };
+
+const getProblemById = async(req,res)=>{
+    
+    const {id} = req.params;
+    try{
+       if(!id)
+        return res.status(400).send("Id is Missing");
+
+       const getAllProblem = await Problem.findById(id);
+
+       if(!getProblem)
+        return res.status(404).send("Problem is Missing");
+
+       res.status(200).send(getProblem);
+    }
+    catch(err){
+      res.status(500).send("Error: "+err);
+    }
+}
+
+
+const getAllProblem = async(req,res)=>{
+    try{
+
+       const getAllProblem = await Problem.find({});
+
+       if(getProblem.length==0)
+        return res.status(404).send("Problem is Missing");
+
+       res.status(200).send(getAllProblem);
+    }
+    catch(err){
+      res.status(500).send("Error: "+err);
+    }
+}
+
+
+module.exports = { createProblem,updateProblem,deleteProblem ,getProblemById,getAllProblem};
