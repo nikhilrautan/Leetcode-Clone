@@ -62,6 +62,14 @@ const updateProblem = async(req,res)=>{
     } = req.body;
 
     try{
+        if(!id){
+            return res.status(400).send("Missing Id Field");
+        }
+
+        const DsaProblem = await Problem.findById(id);
+        if(!DsaProblem){
+            return res.send(404).send("Id is not present in server");
+        }
     for (const { language, completeCode } of referenceSolution) {
 
             const language_id = getLanguageById(language);
@@ -74,10 +82,11 @@ const updateProblem = async(req,res)=>{
                 expected_output: testcase.output,
             }));
 
+            // submitting submition : token laake diye 
             const submitResult = await submitBatch(submissions);
-
+           // token submit krae
             const resultToken = submitResult.map((value) => value.token); // array of tokens
-
+           // token ka result mil gya : fir last m sara data update kra skta hu 
             const testResult = await submitToken(resultToken);
 
             for (const test of testResult) {
@@ -86,6 +95,9 @@ const updateProblem = async(req,res)=>{
                 }
             }
         }
+        // ab store krane k liye 
+
+        Problem.findByIdAndUpdate()
     }
     catch(err){
 
