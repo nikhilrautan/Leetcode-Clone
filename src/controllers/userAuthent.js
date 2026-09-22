@@ -4,6 +4,7 @@ const validate = require('../utils/validator');
 const bcrypt = require("bcrypt");
 const jwt = require('jsonwebtoken');
 
+
 // register feature
 const register = async (req, res) => {
     try {
