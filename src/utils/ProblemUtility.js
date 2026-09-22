@@ -32,7 +32,7 @@ const submitBatch = async (submissions) => {
         method: 'POST',
         url: 'https://ce.judge0.com/submissions/batch',
         params: {
-            base64_encoded: 'true'
+            base64_encoded: 'false'
         },
         headers: {
             'Content-Type': 'application/json'
@@ -64,7 +64,7 @@ const submitToken = async (resultToken, maxRetries = 15) => {
         url: 'https://ce.judge0.com/submissions/batch',
         params: {
             tokens: resultToken.join(','),
-            base64_encoded: 'true',
+            base64_encoded: 'false',
             fields: '*'
         },
         headers: {
