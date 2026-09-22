@@ -102,8 +102,22 @@ const updateProblem = async(req,res)=>{
        res.status(200).send(newProblem);
     }
     catch(err){
-     res.status(404).send("Error: "+err);
+     res.status(404).send("Error: "+err); 
     }
 
 }
-module.exports = { createProblem,updateProblem };
+
+const deleteProblem = async(req,res)=>{
+
+    const {id} = req.params;
+    try{
+       if(!id)
+        return res.status(400).send("Id is Missing");
+
+       const deletedProblem = await Problem.findByIdAndDelete(id);
+    }
+    catch(err){
+
+    }
+}
+module.exports = { createProblem,updateProblem,deleteProblem };
