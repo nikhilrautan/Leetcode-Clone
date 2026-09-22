@@ -54,6 +54,42 @@ const createProblem = async (req, res) => {
 };
 
 const updateProblem = async(req,res)=>{
+    const {id} = req.params;
+     const {
+        title, description, difficulty, tags,
+        visibletestCases, hiddenTestCases, startCode,
+        referenceSolution, problemCreator
+    } = req.body;
+
+    try{
+    for (const { language, completeCode } of referenceSolution) {
+
+            const language_id = getLanguageById(language);
+
+            // Creating Batch Submission
+            const submissions = visibletestCases.map((testcase) => ({
+                source_code: completeCode,
+                language_id: language_id,
+                stdin: testcase.input,
+                expected_output: testcase.output,
+            }));
+
+            const submitResult = await submitBatch(submissions);
+
+            const resultToken = submitResult.map((value) => value.token); // array of tokens
+
+            const testResult = await submitToken(resultToken);
+
+            for (const test of testResult) {
+                if (test.status_id != 3) {
+                    return res.status(400).send("Error Occurred: Reference solution failed on visible test cases");
+                }
+            }
+        }
+    }
+    catch(err){
+
+    }
 
 }
 module.exports = { createProblem,updateProblem };
