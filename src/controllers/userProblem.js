@@ -115,9 +115,14 @@ const deleteProblem = async(req,res)=>{
         return res.status(400).send("Id is Missing");
 
        const deletedProblem = await Problem.findByIdAndDelete(id);
+
+       if(!deletedProblem)
+        return res.status(404).send("Problem is Missing");
+
+       res.status(200).send("Successfully Deleted");
     }
     catch(err){
-
+      res.status(500).send("Error: "+err);
     }
 }
 module.exports = { createProblem,updateProblem,deleteProblem };
