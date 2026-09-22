@@ -1,5 +1,6 @@
 const { getLanguageById, submitBatch, submitToken } = require("../utils/ProblemUtility");
-const Problem = require("../models/problem")
+const Problem = require("../models/problem");
+const Submission = require("../models/submission");
 
 const createProblem = async (req, res) => {
     const {
@@ -161,5 +162,18 @@ const getAllProblem = async(req,res)=>{
     }
 }
 
+const solvedAllProblembyUser = async (req, res) => {
+    try {
+        const userId = req.result._id;
+
+        const submissions = await Submission.find({ userId, status: 'accepted' }).distinct('problemId');
+
+        const solvedProblems = await Problem.find({ _id: { $in: submissions } });
+
+        res.status(200).send(solvedProblems);
+    } catch (err) {
+        res.status(500).send("Error: " + err);
+    }
+};
 
 module.exports = { createProblem,updateProblem,deleteProblem ,getProblemById,getAllProblem};
