@@ -133,7 +133,7 @@ const getProblemById = async(req,res)=>{
        if(!id)
         return res.status(400).send("Id is Missing");
 
-       const getAllProblem = await Problem.findById(id);
+       const getAllProblemById = await Problem.findById(id);
 
        if(!getProblem)
         return res.status(404).send("Problem is Missing");
@@ -151,7 +151,7 @@ const getAllProblem = async(req,res)=>{
 
        const getAllProblem = await Problem.find({});
 
-       if(getProblem.length==0)
+       if(getAllProblem.length==0)
         return res.status(404).send("Problem is Missing");
 
        res.status(200).send(getAllProblem);
@@ -162,20 +162,4 @@ const getAllProblem = async(req,res)=>{
 }
 
 
-const solvedAllProblembyUser = async(req,res)=>{
-    try{
-
-       const getAllProblem = await Problem.find({});
-
-       if(getProblem.length==0)
-        return res.status(404).send("Problem is Missing");
-
-       res.status(200).send(getAllProblem);
-    }
-    catch(err){
-      res.status(500).send("Error: "+err);
-    }
-}
-
-
-module.exports = { createProblem,updateProblem,deleteProblem ,getProblemById,getAllProblem,solvedAllProblembyUser};
+module.exports = { createProblem,updateProblem,deleteProblem ,getProblemById,getAllProblem};

@@ -3,52 +3,55 @@ const Problem = require('./problem');
 const Schema = mongoose.Schema;
 
 const submissionSchema = new Schema({
-    userId:{
-        type:Schema.Types.ObjectId,
+    userId: {
+        type: Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    ProblemId:{
-         type:Schema.Types.ObjectId,
-         ref: 'Problem',
-         required: true
-    },
-    code: {
-         type:String,
+    problemId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Problem',
         required: true
     },
-      language: {
-         type:String,
-        required: true,
-        enum:['javascript','cpp','java']
+    code: {
+        type: String,
+        required: true
     },
     language: {
-         type:String,
+        type: String,
         required: true,
-        enum:['pending','accepted','wrong','error'],
+        enum: ['javascript', 'cpp', 'java']
+    },
+    status: {
+        type: String,
+        required: true,
+        enum: ['pending', 'accepted', 'wrong', 'error'],
         default: 'pending'
     },
-    runtime:{
-        type: Number, // miliseconds
+    runtime: {
+        type: Number, // milliseconds
         default: 0
     },
-     memory:{
+    memory: {
         type: Number, // kB
         default: 0
     },
-     errorMessage:{
-        type: String, // miliseconds
+    errorMessage: {
+        type: String,
         default: ''
     },
-     testCasesPassed:{
+    testCasesPassed: {
         type: Number,
         default: 0
     },
-     testCasesTotal:{
+    testCasesTotal: {
         type: Number,
         default: 0
     }
 }, {
     timestamps: true
-
 });
+
+const Submission = mongoose.model('Submission', submissionSchema);
+
+module.exports = Submission;
