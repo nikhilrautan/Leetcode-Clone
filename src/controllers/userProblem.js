@@ -162,4 +162,20 @@ const getAllProblem = async(req,res)=>{
 }
 
 
-module.exports = { createProblem,updateProblem,deleteProblem ,getProblemById,getAllProblem};
+const solvedAllProblembyUser = async(req,res)=>{
+    try{
+
+       const getAllProblem = await Problem.find({});
+
+       if(getProblem.length==0)
+        return res.status(404).send("Problem is Missing");
+
+       res.status(200).send(getAllProblem);
+    }
+    catch(err){
+      res.status(500).send("Error: "+err);
+    }
+}
+
+
+module.exports = { createProblem,updateProblem,deleteProblem ,getProblemById,getAllProblem,solvedAllProblembyUser};
