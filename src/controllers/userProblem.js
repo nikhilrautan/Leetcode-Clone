@@ -96,11 +96,13 @@ const updateProblem = async(req,res)=>{
             }
         }
         // ab store krane k liye 
-
-        Problem.findByIdAndUpdate()
+                                                              // update maarne se phle validtor pr chaeck kr lena
+       const newProblem = await Problem.findByIdAndUpdate(id, {...req.body},{runvalidators:true, new:true});
+      
+       res.status(200).send(newProblem);
     }
     catch(err){
-
+     res.status(404).send("Error: "+err);
     }
 
 }
