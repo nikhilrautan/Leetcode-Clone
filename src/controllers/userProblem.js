@@ -148,18 +148,18 @@ const getProblemById = async(req,res)=>{
 
 const getAllProblem = async(req,res)=>{
     try{
+       const problems = await Problem.find({});
 
-       const getAllProblem = await Problem.find({});
-
-       if(getAllProblem.length==0)
+       if(problems.length == 0)
         return res.status(404).send("Problem is Missing");
 
-       res.status(200).send(getAllProblem);
+       res.status(200).send(problems);
     }
     catch(err){
       res.status(500).send("Error: "+err);
     }
 }
+
 
 const solvedAllProblembyUser = async (req, res) => {
     try {
