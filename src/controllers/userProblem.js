@@ -145,6 +145,7 @@ const getProblemById = async(req,res)=>{
     }
 }
 
+
 const getAllProblem = async(req,res)=>{
     try{
        const problems = await Problem.find({});
