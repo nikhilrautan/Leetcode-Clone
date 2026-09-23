@@ -11,8 +11,9 @@ problemRouter.put("/update/:id",adminMiddleware, updateProblem);
 problemRouter.delete("/delete/:id",adminMiddleware, deleteProblem);
 
 // these are user specific (we dont need admin here so not using adminMiddleware)
-problemRouter.get("/ProblemById/:id",userMiddleware, getProblemById);
+problemRouter.get("/problemById/:id",userMiddleware, getProblemById);
 problemRouter.get("/getAllProblem", userMiddleware,getAllProblem);
-problemRouter.get("/ProblemSolvedByUser",userMiddleware, solvedAllProblembyUser);
+
+// problemRouter.get("/ProblemSolvedByUser",userMiddleware, solvedAllProblembyUser);
 
 module.exports = problemRouter;

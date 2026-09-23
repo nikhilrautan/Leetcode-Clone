@@ -128,13 +128,12 @@ const deleteProblem = async(req,res)=>{
 }
 
 const getProblemById = async(req,res)=>{
-    
     const {id} = req.params;
     try{
        if(!id)
         return res.status(400).send("Id is Missing");
 
-       const getAllProblemById = await Problem.findById(id);
+       const getProblem = await Problem.findById(id);
 
        if(!getProblem)
         return res.status(404).send("Problem is Missing");
