@@ -15,6 +15,15 @@ const submitCode = async(req,res)=>{
     const problem =  await Problem.findById(problemId);
 
     // testcases(hidden)
+
+    const submittedResult = await Submission.create({
+      userId,
+      problemId,
+      code,
+      language,
+      status:'pending',
+      testCasesTotal:problem.hiddentestCases.length,
+    })
   
     }
     catch(err){
