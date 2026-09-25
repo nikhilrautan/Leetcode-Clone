@@ -40,6 +40,11 @@ const submitCode = async(req,res)=>{
             const submitResult = await submitBatch(submissions);
              // token submit krae
             const resultToken = submitResult.map((value) => value.token); // array of tokens
+            // token ka result mil gya : fir last m sara data update kra skta hu 
+            const testResult = await submitToken(resultToken);
+
+            // submittedResult ko update krna hoga
+            
     }
     catch(err){
 
