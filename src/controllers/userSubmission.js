@@ -48,17 +48,35 @@ const submitCode = async(req,res)=>{
             let runtime =0;
             let memory =0;
             let status = 'accepted';
+            let errorMessage = ' ';
 
-            for(const testresult){
+         for(const testResult){
             if(test.status_id ==3){
                 testCasesPassed++;
                 runtime = runtime + parseFloate(test.time);
                 memory = Math.max(memory,test.memory);
              }
              else{
-
+               if(test.status_id==4){
+                status = 'error'
+                errorMessage = test.stderr
+               }
+               else{
+                status = 'wrong'
+                errorMessage = test.stderr
+               }
              }
             }
+
+
+            // store the result in Database in Submission
+            submittedResult.status = status;
+            submittedResult.testCasesPassed = testCasesPassed;
+            submittedResult.errorMessage = errorMessage;
+            submittedResult.runtime = runtime;
+             submittedResult.memory = memory;
+             
+             await  submittedResult.save();
 
     }
     catch(err){
