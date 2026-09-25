@@ -75,11 +75,14 @@ const submitCode = async(req,res)=>{
             submittedResult.errorMessage = errorMessage;
             submittedResult.runtime = runtime;
              submittedResult.memory = memory;
-             
+
              await  submittedResult.save();
+
+             res.status(201).send(submittedResult);
 
     }
     catch(err){
+        res.status(500).send("internal Server Error"+ err);
 
     }
 }
