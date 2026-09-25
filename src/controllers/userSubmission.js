@@ -44,7 +44,22 @@ const submitCode = async(req,res)=>{
             const testResult = await submitToken(resultToken);
 
             // submittedResult ko update krna hoga
-            
+            let testCasesPassed =0;
+            let runtime =0;
+            let memory =0;
+            let status = 'accepted';
+
+            for(const testresult){
+            if(test.status_id ==3){
+                testCasesPassed++;
+                runtime = runtime + parseFloate(test.time);
+                memory = Math.max(memory,test.memory);
+             }
+             else{
+
+             }
+            }
+
     }
     catch(err){
 
