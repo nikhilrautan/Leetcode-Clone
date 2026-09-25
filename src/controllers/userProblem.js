@@ -28,7 +28,8 @@ const createProblem = async (req, res) => {
 
             const testResult = await submitToken(resultToken);
 
-            console.log(testResult);
+            // console.log(testResult);
+            
             for (const test of testResult) {
                 if (test.status_id != 3) {
                     return res.status(400).send("Error Occurred: Reference solution failed on visible test cases");
