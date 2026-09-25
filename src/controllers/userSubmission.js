@@ -1,6 +1,6 @@
 const Problem = requie("../models/problem");
 const Submission = require("../models/submission");
-const getLanguageById = require("../utils/problemUtility");
+const {getLanguageById,submitBatch} = require("../utils/problemUtility");
 const submitCode = async(req,res)=>{
 
 
@@ -29,6 +29,17 @@ const submitCode = async(req,res)=>{
     // judge0 ko code submit krna hai 
 
     const language_id = getLanguageById(language);
+      const submissions = problem.hiddenTestCases.map((testcase) => ({
+                source_code: code,
+                language_id: languageId,
+                stdin: testcase.input,
+                expected_output: testcase.output,
+            }));
+
+            // submitting submition : token laake diye 
+            const submitResult = await submitBatch(submissions);
+             // token submit krae
+            const resultToken = submitResult.map((value) => value.token); // array of tokens
     }
     catch(err){
 
