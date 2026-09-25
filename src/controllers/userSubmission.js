@@ -1,5 +1,6 @@
 const Problem = requie("../models/problem");
 const Submission = require("../models/submission");
+const getLanguageById = require("../utils/problemUtility");
 const submitCode = async(req,res)=>{
 
 
@@ -22,9 +23,12 @@ const submitCode = async(req,res)=>{
       code,
       language,
       status:'pending',
-      testCasesTotal:problem.hiddentestCases.length,
+      testCasesTotal:problem.hiddenTestCases.length,
     })
   
+    // judge0 ko code submit krna hai 
+
+    const language_id = getLanguageById(language);
     }
     catch(err){
 
