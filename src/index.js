@@ -11,12 +11,14 @@ const userAuth = require("./routes/userAuth");
 const { clientEncryption } = require('./models/user');
 const redisClient = require('./config/redis');
 const problemRouter = require("./routes/problemCreator");
+const submitRouter = require("./routes/submit");
 
 app.use(express.json());
 app.use(cookieparser());
 
 app.use('/user', userAuth);
 app.use('/problem', problemRouter);
+app.use('/submission',submitRouter);
 
 const InitalizeConnection = async () => {
     try {

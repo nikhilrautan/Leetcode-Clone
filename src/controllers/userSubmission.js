@@ -51,7 +51,7 @@ const submitCode = async (req, res) => {
         let memory = 0;
         let status = 'accepted';
         let errorMessage = '';
-
+ 
         for (const test of testResult) {
             if (test.status_id == 3) {
                 testCasesPassed++;
