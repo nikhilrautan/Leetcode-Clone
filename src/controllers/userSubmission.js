@@ -52,7 +52,7 @@ const submitCode = async (req, res) => {
         let memory = 0;
         let status = 'accepted';
         let errorMessage = '';
- 
+
         for (const test of testResult) {
             if (test.status_id == 3) {
                 testCasesPassed++;
@@ -78,17 +78,24 @@ const submitCode = async (req, res) => {
 
         await submittedResult.save();
 
-    // problem id ko inert krenge user schema k problem solved me 
-    // if it is not presnt there or present
-    
-    if(req.result.problemSolved.includes(problemId)){
-        req.result.problemSolved.push(problemId);
-        await req.result.save();
-    }
+        // problemId ko User ke problemSolved me daalna hai, sirf accepted status pe
+        // aur sirf tab jab pehle se present na ho (duplicate na ho)
+        if (status === 'accepted') {
+            await User.findByIdAndUpdate(userId, {
+                $addToSet: { problemSolved: problemId },
+            });
+        }
 
-        res.status(201).send(submittedResult);
+        res.status(200).json({
+            accepted: status === 'accepted',
+            totalTestCases: submittedResult.testCasesTotal,
+            passedTestCases: testCasesPassed,
+            runtime,
+            memory,
+        });
+
     } catch (err) {
-        res.status(500).send("Internal Server Error: " + err);
+        res.status(500).send("Internal Server Error: " + err.message);
     }
 };
 
