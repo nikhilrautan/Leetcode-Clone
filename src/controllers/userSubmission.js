@@ -1,5 +1,6 @@
 const Problem = require("../models/problem");
 const Submission = require("../models/submission");
+const User = require("../models/user");
 const { getLanguageById, submitBatch, submitToken } = require("../utils/problemUtility");
 
 const submitCode = async (req, res) => {
@@ -76,6 +77,14 @@ const submitCode = async (req, res) => {
         submittedResult.memory = memory;
 
         await submittedResult.save();
+
+    // problem id ko inert krenge user schema k problem solved me 
+    // if it is not presnt there or present
+    
+    if(req.result.problemSolved.includes(problemId)){
+        req.result.problemSolved.push(problemId);
+        await req.result.save();
+    }
 
         res.status(201).send(submittedResult);
     } catch (err) {
