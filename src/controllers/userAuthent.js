@@ -3,6 +3,7 @@ const User = require("../models/user");
 const validate = require('../utils/validator');
 const bcrypt = require("bcrypt");
 const jwt = require('jsonwebtoken');
+const Submission = require("../models/submission");
 
 // register feature
 const register = async (req, res) => {
@@ -108,4 +109,22 @@ const adminRegister = async (req,res)=>{
     }
 
 }
-module.exports = { register, login, logout, getProfile ,adminRegister};
+
+const deleteProfile = async(req,res)=>{
+
+    try{
+    const userID = req.result._id;
+
+    // userSchema Delete
+   await  User.findByIdAndDelete(userId);
+   
+   // submission se bhi delete kro 
+    await Submission.deleteMany({userId});
+
+    response.status(200).send("Deleted Successfully");
+    }
+    catch(err){
+
+    }
+}
+module.exports = { register, login, logout, getProfile ,adminRegister, deleteProfile};

@@ -12,12 +12,10 @@ const submitCode = async (req, res) => {
         if (!userId || !code || !problemId || !language)
             return res.status(400).send("Some field Missing");
 
-        // Fetch the problem from database
         const problem = await Problem.findById(problemId);
         if (!problem)
             return res.status(404).send("Problem not found");
 
-        // testcases(hidden)
         const submittedResult = await Submission.create({
             userId,
             problemId,
@@ -27,7 +25,6 @@ const submitCode = async (req, res) => {
             testCasesTotal: problem.hiddenTestCases.length,
         });
 
-        // judge0 ko code submit krna hai
         const languageId = getLanguageById(language);
 
         const submissions = problem.hiddenTestCases.map((testcase) => ({
@@ -37,16 +34,10 @@ const submitCode = async (req, res) => {
             expected_output: testcase.output,
         }));
 
-        // submitting submission: token laake diye
         const submitResult = await submitBatch(submissions);
-
-        // token submit krae
-        const resultToken = submitResult.map((value) => value.token); // array of tokens
-
-        // token ka result mil gya: fir last m sara data update kra skta hu
+        const resultToken = submitResult.map((value) => value.token);
         const testResult = await submitToken(resultToken);
 
-        // submittedResult ko update krna hoga
         let testCasesPassed = 0;
         let runtime = 0;
         let memory = 0;
@@ -69,7 +60,6 @@ const submitCode = async (req, res) => {
             }
         }
 
-        // store the result in Database in Submission
         submittedResult.status = status;
         submittedResult.testCasesPassed = testCasesPassed;
         submittedResult.errorMessage = errorMessage;
@@ -78,8 +68,6 @@ const submitCode = async (req, res) => {
 
         await submittedResult.save();
 
-        // problemId ko User ke problemSolved me daalna hai, sirf accepted status pe
-        // aur sirf tab jab pehle se present na ho (duplicate na ho)
         if (status === 'accepted') {
             await User.findByIdAndUpdate(userId, {
                 $addToSet: { problemSolved: problemId },
@@ -99,4 +87,68 @@ const submitCode = async (req, res) => {
     }
 };
 
-module.exports = submitCode;
+const runCode = async (req, res) => {
+    try {
+        const userId = req.result._id;
+        const problemId = req.params.id;
+        const { code, language } = req.body;
+
+        if (!userId || !code || !problemId || !language)
+            return res.status(400).send("Some field Missing");
+
+        const problem = await Problem.findById(problemId);
+        if (!problem)
+            return res.status(404).send("Problem not found");
+
+        const languageId = getLanguageById(language);
+
+        const submissions = problem.visibleTestCases.map((testcase) => ({
+            source_code: code,
+            language_id: languageId,
+            stdin: testcase.input,
+            expected_output: testcase.output,
+        }));
+
+        const submitResult = await submitBatch(submissions);
+        const resultToken = submitResult.map((value) => value.token);
+        const testResult = await submitToken(resultToken);
+
+        let testCasesPassed = 0;
+        let runtime = 0;
+        let memory = 0;
+        let status = 'accepted';
+        let errorMessage = '';
+
+        for (const test of testResult) {
+            if (test.status_id == 3) {
+                testCasesPassed++;
+                runtime = runtime + parseFloat(test.time);
+                memory = Math.max(memory, test.memory);
+            } else {
+                if (test.status_id == 4) {
+                    status = 'error';
+                    errorMessage = test.stderr;
+                } else {
+                    status = 'wrong';
+                    errorMessage = test.stderr;
+                }
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            testCases: testResult,
+            accepted: status === 'accepted',
+            totalTestCases: problem.visibleTestCases.length,
+            passedTestCases: testCasesPassed,
+            runtime,
+            memory,
+            errorMessage,
+        });
+
+    } catch (err) {
+        res.status(500).send("Internal Server Error: " + err.message);
+    }
+};
+
+module.exports = { submitCode, runCode };
