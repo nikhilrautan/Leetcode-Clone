@@ -5,7 +5,7 @@ const adminMiddleware = require("../middleware/adminMiddleware");
 const { createProblem, updateProblem ,deleteProblem,getProblemById, getAllProblem,solvedAllProblembyUser} = require("../controllers/userProblem");
 const userMiddleware = require("../middleware/userMiddleware");
 const userProblemController = require("../controllers/userProblem");
-console.log(userProblemController);
+// console.log(userProblemController);
 
 // Create
 problemRouter.post("/Create", adminMiddleware, createProblem);
