@@ -163,17 +163,16 @@ const getAllProblem = async(req,res)=>{
 
 
 const solvedAllProblembyUser = async (req, res) => {
-    try {
-        const userId = req.result._id;
-
-        const submissions = await Submission.find({ userId, status: 'accepted' }).distinct('problemId');
-
-        const solvedProblems = await Problem.find({ _id: { $in: submissions } });
-
-        res.status(200).send(solvedProblems);
-    } catch (err) {
-        res.status(500).send("Error: " + err);
-    }
+  try {
+    const userId = req.result._id; // or however you get the logged-in user
+    const user = await User.findById(userId).populate({
+      path: "problemSolved",
+      select: "_id title difficulty tags",
+    });
+    res.status(200).json(user.problemSolved);
+  } catch (err) {
+    res.status(500).send("Error: " + err.message);
+  }
 };
 
-module.exports = { createProblem,updateProblem,deleteProblem ,getProblemById,getAllProblem};
+module.exports = { createProblem, updateProblem, deleteProblem, getProblemById, getAllProblem, solvedAllProblembyUser };
