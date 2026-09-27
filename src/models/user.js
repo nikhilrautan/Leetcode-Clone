@@ -46,6 +46,7 @@ const userSchema = new Schema({
     timestamps: true});
 
     // post mtlb ye baad m chlega is instruction k baad , pre m ye phle chlta 
+    // jb bhi ye findOneAndDelete chlega tb tb use baad ye bhi chlega 
     userSchema.post('findOneAndDelete',async function (userInfo){
         if(UserInfo){
             await mongoose.model('submission').deleteMany({userId: UserInfo._id});
