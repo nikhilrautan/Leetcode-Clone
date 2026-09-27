@@ -6,7 +6,8 @@ const submissionSchema = new Schema({
     userId: {
         type: Schema.Types.ObjectId,
         ref: 'user',
-        required: true
+        required: true,
+        index:true,
     },
     problemId: {
         type: Schema.Types.ObjectId,
@@ -51,6 +52,11 @@ const submissionSchema = new Schema({
 }, {
     timestamps: true
 });
+
+// we made a compound index 
+// userId aur problemId ko humne ascending order m arrange kr diya 
+// aur agr humne inhe -1 se asign kra to descending order m arrange krdega
+submissionSchema.index({userId:1, problemId:1});
 
 const Submission = mongoose.model('Submission', submissionSchema);
 
