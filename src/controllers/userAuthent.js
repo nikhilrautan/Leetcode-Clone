@@ -119,7 +119,7 @@ const deleteProfile = async(req,res)=>{
    await  User.findByIdAndDelete(userId);
    
    // submission se bhi delete kro 
-    await Submission.deleteMany({userId});
+    // await Submission.deleteMany({userId});
 
     response.status(200).send("Deleted Successfully");
     }

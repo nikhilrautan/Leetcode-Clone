@@ -45,9 +45,10 @@ const userSchema = new Schema({
 },{
     timestamps: true});
 
+    // post mtlb ye baad m chlega is instruction k baad , pre m ye phle chlta 
     userSchema.post('findOneAndDelete',async function (userInfo){
         if(UserInfo){
-            await mongoose.model('submission').deleteMany({userId: User._id});
+            await mongoose.model('submission').deleteMany({userId: UserInfo._id});
         }
     });
 
