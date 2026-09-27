@@ -164,21 +164,19 @@ const getAllProblem = async(req,res)=>{
 
 const solvedAllProblembyUser = async (req, res) => {
   try {
-    console.log("req.result:", req.result);
-    const userId = req.result._id;
-    console.log("userId:", userId);
-
-    const user = await User.findById(userId).populate({
-      path: "problemSolved",
-      select: "_id title difficulty tags",
-    });
-    console.log("user found:", user);
+    const user = req.result; // already populated by userMiddleware
 
     if (!user) {
       return res.status(404).send("User not found");
     }
 
-    res.status(200).json(user.problemSolved);
+    // If problemSolved needs full problem details, populate it here instead
+    const populatedUser = await user.populate({
+      path: "problemSolved",
+      select: "_id title difficulty tags",
+    });
+
+    res.status(200).json(populatedUser.problemSolved);
   } catch (err) {
     res.status(500).send("Error: " + err.message);
   }
