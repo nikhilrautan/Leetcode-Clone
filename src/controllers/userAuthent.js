@@ -124,7 +124,7 @@ const deleteProfile = async(req,res)=>{
     response.status(200).send("Deleted Successfully");
     }
     catch(err){
-
+      res.status(500).send("Internal Server Error");
     }
 }
 module.exports = { register, login, logout, getProfile ,adminRegister, deleteProfile};
