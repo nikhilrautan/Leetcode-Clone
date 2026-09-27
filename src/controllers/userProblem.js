@@ -164,11 +164,20 @@ const getAllProblem = async(req,res)=>{
 
 const solvedAllProblembyUser = async (req, res) => {
   try {
-    const userId = req.result._id; // or however you get the logged-in user
+    console.log("req.result:", req.result);
+    const userId = req.result._id;
+    console.log("userId:", userId);
+
     const user = await User.findById(userId).populate({
       path: "problemSolved",
       select: "_id title difficulty tags",
     });
+    console.log("user found:", user);
+
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
     res.status(200).json(user.problemSolved);
   } catch (err) {
     res.status(500).send("Error: " + err.message);
