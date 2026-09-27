@@ -1,58 +1,56 @@
 const mongoose = require('mongoose');
-const {Schema}= mongoose;
+const { Schema } = mongoose;
 
 const userSchema = new Schema({
-    firstName:{
+    firstName: {
         type: String,
         required: true,
-        minLength:3,
+        minLength: 3,
         maxLength: 20,
     },
-    lastName:{
+    lastName: {
         type: String,
-        minLength:3,
+        minLength: 3,
         maxLength: 20,
     },
-    emailId:{
-        type:String,
+    emailId: {
+        type: String,
         required: true,
         unique: true,
         trim: true,
         lowercase: true,
         immutable: true,
     },
-    age:{
-        type:Number,
-        min:6,
-        max:80,
+    age: {
+        type: Number,
+        min: 6,
+        max: 80,
     },
-    role:{
-        type:String,
-        enum:['user','admin'],
-        default:'user'
+    role: {
+        type: String,
+        enum: ['user', 'admin'],
+        default: 'user'
     },
-    problemSolved:{
-        type :[{
-            type:Schema.Types.ObjectId,
-            ref:'problem'
+    problemSolved: {
+        type: [{
+            type: Schema.Types.ObjectId,
+            ref: 'problem'
         }],
-        unique:true,
     },
-    password:{
-        type:String,
+    password: {
+        type: String,
         required: true,
     }
-},{
-    timestamps: true});
+}, {
+    timestamps: true
+});
 
-    // post mtlb ye baad m chlega is instruction k baad , pre m ye phle chlta 
-    // jb bhi ye findOneAndDelete chlega tb tb use baad ye bhi chlega 
-    userSchema.post('findOneAndDelete',async function (userInfo){
-        if(UserInfo){
-            await mongoose.model('submission').deleteMany({userId: UserInfo._id});
-        }
-    });
+userSchema.post('findOneAndDelete', async function (userInfo) {
+    if (userInfo) {
+        await mongoose.model('submission').deleteMany({ userId: userInfo._id });
+    }
+});
 
-    const  User = mongoose.model("user",userSchema);
+const User = mongoose.model("user", userSchema);
 
-    module.exports = User;
+module.exports = User;
