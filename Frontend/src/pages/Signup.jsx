@@ -5,11 +5,15 @@ function Signup(){
     const [name,setName] = useState('');
     const [email,setEmail] = useState('');
     const [password,setPassword]  = useState('');
+     const [reEnterPassword,SetreEnterPassword]  = useState('');
 
     const handleSubmit = (e)=>{
         e.preventDefault();
 
         console.log(name,email,password);
+
+        //validation
+        if(password!= reEnterPassword)
 
         // form ko submit kro
         //Backend submit  
