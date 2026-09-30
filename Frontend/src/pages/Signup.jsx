@@ -8,11 +8,16 @@ function Signup(){
 
     const handleSubmit = (e)=>{
         e.preventDefault();
+
+        // form ko submit kro
+        //Backend submit  
     }
     return(
-        <>
-        Signup Page
-        </>
+        <form onSubmit={handleSubmit}>
+            <input type="text" value={name} placeholder="Enter Your FirstName" onChange={(e)=>setName(e.target.value)}></input>
+            <input type="email" value={email} placeholder="Enter Your Email" onChange={(e)=>setEmail(e.target.value)}></input>
+            <input type="password" value={password} placeholder="Enter Your Password" onChange={(e)=>setPassword(e.target.value)}></input>
+        </form>>
     )
 }
 
