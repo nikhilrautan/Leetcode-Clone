@@ -22,7 +22,7 @@ function Signup() {
           {...register("password")}
           placeholder="Enter password"
         />
-        <button type="submit">Submit</button>
+        <button type="submit" className="btn btn-lg">Submit</button>
       </form>
     </>
   );
