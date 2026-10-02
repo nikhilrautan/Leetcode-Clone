@@ -1,69 +1,86 @@
-import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from '@hookform/resolvers/zod';
-import {z } from 'zod';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 // Schema validation for signup
 const signupSchema = z.object({
-  firstName :z.string().min(3,"Name should contain atleast 3 character"),
-  emailId : z.string().email(),
-  password: z.string().min(8,"Password should contain atleast 8 character")
-
-}) 
+  firstName: z.string().min(3, "Name should contain at least 3 characters"),
+  emailId: z.string().email("Enter a valid email address"),
+  password: z.string().min(8, "Password should contain at least 8 characters"),
+});
 
 function Signup() {
   const {
     register,
     handleSubmit,
-    formState: { errors },} = useForm({resolver:zodResolver(signupSchema)});
+    formState: { errors, isSubmitting },
+  } = useForm({ resolver: zodResolver(signupSchema) });
 
   const submittedData = (data) => {
     console.log(data);
   };
 
   return (
-    <>
-      <form onSubmit={handleSubmit(submittedData)} className= 'min-h-screen flex flex-col justify-center item-center gap-y-2 max-w-xl ml-10'>
-        <input {...register("firstName")} placeholder="Enter Name" />
-        {errors.firstName && (<span>{errors.firstName.message}</span>)}
-        <input {...register("emailId")} placeholder="Enter Email" />
-        <input
-          type="password"
-          {...register("password")}
-          placeholder="Enter password"
-        />
-        <button type="submit" className="btn btn-lg">Submit</button>
+    <div className="min-h-screen flex items-center justify-center">
+      <form
+        onSubmit={handleSubmit(submittedData)}
+        className="w-full max-w-md flex flex-col gap-5 px-4"
+        noValidate
+      >
+        <h1 className="text-4xl font-bold text-center mb-2">Leetcode</h1>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="firstName">First Name</label>
+          <input
+            id="firstName"
+            type="text"
+            placeholder="John"
+            className={`input input-bordered w-full ${errors.firstName ? "input-error" : ""}`}
+            {...register("firstName")}
+          />
+          {errors.firstName && (
+            <span className="text-error text-sm">{errors.firstName.message}</span>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="emailId">Email</label>
+          <input
+            id="emailId"
+            type="email"
+            placeholder="john@example.com"
+            className={`input input-bordered w-full ${errors.emailId ? "input-error" : ""}`}
+            {...register("emailId")}
+          />
+          {errors.emailId && (
+            <span className="text-error text-sm">{errors.emailId.message}</span>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            className={`input input-bordered w-full ${errors.password ? "input-error" : ""}`}
+            {...register("password")}
+          />
+          {errors.password && (
+            <span className="text-error text-sm">{errors.password.message}</span>
+          )}
+        </div>
+
+        <button
+          type="submit"
+          className="btn btn-primary self-center px-8 mt-2"
+          disabled={isSubmitting}
+        >
+          Sign Up
+        </button>
       </form>
-    </>
+    </div>
   );
-
-
-
-
-    // const [name,setName] = useState('');
-    // const [email,setEmail] = useState('');
-    // const [password,setPassword]  = useState('');
-    //  const [reEnterPassword,SetreEnterPassword]  = useState('');
-
-    // const handleSubmit = (e)=>{
-    //     e.preventDefault();
-
-    //     console.log(name,email,password);
-
-    //     //validation
-    //     if(password!= reEnterPassword)
-
-    //     // form ko submit kro
-    //     //Backend submit  
-    // }
-    // return(
-    //     <form onSubmit={handleSubmit} className="min-h-screen flex flex-col justify-center items-center">
-    //         <input type="text" value={name} placeholder="Enter Your FirstName" onChange={(e)=>setName(e.target.value)}></input>
-    //         <input type="email" value={email} placeholder="Enter Your Email" onChange={(e)=>setEmail(e.target.value)}></input>
-    //         <input type="password" value={password} placeholder="Enter Your Password" onChange={(e)=>setPassword(e.target.value)}></input>
-    //         <button type ="submit">Submit</button>
-    //     </form>
-    // )
 }
 
-export default Signup
+export default Signup;
