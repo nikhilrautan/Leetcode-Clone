@@ -23,8 +23,9 @@ function Signup() {
 
   return (
     <>
-      <form onSubmit={handleSubmit(submittedData)} className= 'min-h-screen flex flex-col justify-center item-center gap-y-2'>
+      <form onSubmit={handleSubmit(submittedData)} className= 'min-h-screen flex flex-col justify-center item-center gap-y-2 max-w-xl ml-10'>
         <input {...register("firstName")} placeholder="Enter Name" />
+        {errors.firstName && (<span>{errors.firstName.message}</span>)}
         <input {...register("emailId")} placeholder="Enter Email" />
         <input
           type="password"
