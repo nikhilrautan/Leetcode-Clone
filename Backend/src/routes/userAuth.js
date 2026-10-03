@@ -23,7 +23,7 @@ authRouter.get('/check',userMiddleware, (req,res)=>{
         user:reply,
         message: "Valid User"
     })
-})
+}) 
 
 
 module.exports = authRouter;
