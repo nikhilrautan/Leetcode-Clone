@@ -1,20 +1,22 @@
-const { rateLimit } = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const { RedisStore } = require('rate-limit-redis');
-const redisClient = require('../config/redis'); // wherever your redisClient is exported from
+const redisClient = require('../config/redis');
 
-const createRateLimiter = ({ windowMs, max, message }) => {
+const createRateLimiter = ({ windowMs, max, message, prefix }) => {
     return rateLimit({
         windowMs,
         max,
-        standardHeaders: true, // return rate limit info in RateLimit-* headers
-        legacyHeaders: false,  // disable X-RateLimit-* headers
+        standardHeaders: true,
+        legacyHeaders: false,
         message: { error: message || "Too many requests, please try again later." },
         store: new RedisStore({
             sendCommand: (...args) => redisClient.sendCommand(args),
+            prefix: prefix || 'rl:',
         }),
         keyGenerator: (req) => {
-            // rate limit per logged-in user if available, else by IP
-            return req.result?._id?.toString() || req.ip;
+            // per logged-in user if available, else by IP (IPv6-safe)
+            const userId = req.result?._id?.toString();
+            return userId ? `user:${userId}` : ipKeyGenerator(req.ip);
         },
     });
 };
