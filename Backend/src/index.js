@@ -3,6 +3,7 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const cookieparser = require('cookie-parser');
 
 const main = require('./config/db');
@@ -12,6 +13,10 @@ const problemRouter = require('./routes/problemCreator');
 
 const app = express();
 
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true,
+}));
 app.use(express.json());
 app.use(cookieparser());
 

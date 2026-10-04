@@ -1,39 +1,39 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, NavLink } from "react-router-dom";
+import { loginUser } from "../store/authSlice";
 
-// Schema validation for signup
-const signupSchema = z.object({
+const loginSchema = z.object({
   emailId: z.string().email("Enter a valid email address"),
   password: z.string().min(8, "Password should contain at least 8 characters"),
 });
 
 function Login() {
-
-   const dispatch = useDispatch();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isAuthenticated, loading , error } = useSelector((state)=> state.auth);
+  const { isAuthenticated, loading, error } = useSelector((state) => state.auth);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm({ resolver: zodResolver(signupSchema) });
+    formState: { errors },
+  } = useForm({ resolver: zodResolver(loginSchema) });
 
-    useEffect(()=>{
-    if(isAuthenticated){
-    navigate('/');
-  }
-    },[isAuthenticated,navigate]);
-    
-    const onSubmit = (data) => {
-    dispatch(registerUser(data));
+  useEffect(() => {
+    if (isAuthenticated) navigate("/");
+  }, [isAuthenticated, navigate]);
+
+  const onSubmit = (data) => {
+    dispatch(loginUser(data));
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center">
       <form
-        onSubmit={handleSubmit(submittedData)}
+        onSubmit={handleSubmit(onSubmit)}
         className="w-full max-w-md flex flex-col gap-5 px-4"
         noValidate
       >
@@ -67,13 +67,22 @@ function Login() {
           )}
         </div>
 
+        {error && <div className="text-error text-sm text-center">{error}</div>}
+
         <button
           type="submit"
           className="btn btn-primary self-center px-8 mt-2"
-          disabled={isSubmitting}
+          disabled={loading}
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
+
+        <p className="text-center text-sm">
+          Don't have an account?{" "}
+          <NavLink to="/signup" className="link link-primary">
+            Sign up
+          </NavLink>
+        </p>
       </form>
     </div>
   );
