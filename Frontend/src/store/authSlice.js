@@ -32,10 +32,7 @@ export const checkAuth = createAsyncThunk(
       const { data } = await axiosClient.get("/user/check");
       return data.user;
     } catch (error) {
-      // 401 just means "not logged in" - not a real error
-      if (error.response?.status === 401) {
-        return rejectWithValue(null);
-      }
+      if (error.response?.status === 401) return rejectWithValue(null);
       return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
@@ -52,8 +49,6 @@ export const logoutUser = createAsyncThunk(
     }
   }
 );
-
-// ---------- Slice ----------
 
 const authSlice = createSlice({
   name: "auth",
@@ -77,7 +72,7 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.isAuthenticated = !!action.payload; // isse aisa hota hai ki agr jaise hmare pass backend se NULL(data) aae to usko bhi ye false return kr k dega(mtlb koi info nhi aai )
+        state.isAuthenticated = !!action.payload;
         state.user = action.payload;
       })
       .addCase(registerUser.rejected, (state, action) => {
