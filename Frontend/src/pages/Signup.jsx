@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../store/authSlice";
+import { Link } from "react-router";
 
 // Schema validation for signup
 const signupSchema = z.object({
@@ -119,6 +120,12 @@ function Signup() {
           {loading && <span className="loading loading-spinner loading-sm" />}
           Sign Up
         </button>
+        <p className="text-center text-sm">
+      Already have an account?{" "}
+      <Link to="/login" className="link link-primary">
+         Log in
+     </Link>
+       </p>
       </form>
     </div>
   );
