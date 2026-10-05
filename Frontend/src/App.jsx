@@ -5,10 +5,11 @@ import { checkAuth } from "./store/authSlice";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Homepage from "./pages/Homepage";
+import AdminPanel from "./pages/AdminPanel";
 
 function App() {
   const dispatch = useDispatch();
-  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
@@ -25,17 +26,29 @@ function App() {
 
   return (
     <Routes>
+      {/* Main page of the site - login/signup both redirect here */}
       <Route
         path="/"
-        element={isAuthenticated ? <Homepage /> : <Navigate to="/signup" />}
+        element={isAuthenticated ? <Homepage /> : <Navigate to="/signup" replace />}
       />
       <Route
         path="/login"
-        element={isAuthenticated ? <Navigate to="/" /> : <Login />}
+        element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
       />
       <Route
         path="/signup"
-        element={isAuthenticated ? <Navigate to="/" /> : <Signup />}
+        element={isAuthenticated ? <Navigate to="/" replace /> : <Signup />}
+      />
+      {/* Admin only */}
+      <Route
+        path="/admin"
+        element={
+          isAuthenticated && user?.role === "admin" ? (
+            <AdminPanel />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
       />
     </Routes>
   );
