@@ -1,120 +1,94 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router";
-import { useDispatch, useSelector } from "react-redux";
-import axiosClient from "../utils/axiosClient";
-import { logoutUser } from "../store/authSlice";
-
-const difficultyColor = (d) => {
-  const level = (d || "").toLowerCase();
-  if (level === "easy") return "badge-success";
-  if (level === "medium") return "badge-warning";
-  return "badge-error";
-};
+import { useEffect, useState } from 'react';
+import { NavLink } from 'react-router'; // Fixed import
+import { useDispatch, useSelector } from 'react-redux';
+import axiosClient from '../utils/axiosClient';
+import { logoutUser } from '../authSlice';
 
 function Homepage() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-
   const [problems, setProblems] = useState([]);
   const [solvedProblems, setSolvedProblems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
-    status: "all",
-    difficulty: "all",
-    tag: "all",
+    difficulty: 'all',
+    tag: 'all',
+    status: 'all' 
   });
 
   useEffect(() => {
-    const fetchData = async () => {
-      // Adjust these URLs to match your backend routes
-      const [allRes, solvedRes] = await Promise.allSettled([
-        axiosClient.get("/problem/getAllProblem"),
-        axiosClient.get("/problem/problemSolvedByUser"),
-      ]);
-
-      if (allRes.status === "fulfilled") {
-        setProblems(allRes.value.data);
-      } else {
-        setError("Could not load problems");
+    const fetchProblems = async () => {
+      try {
+        const { data } = await axiosClient.get('/problem/getAllProblem');
+        setProblems(data);
+      } catch (error) {
+        console.error('Error fetching problems:', error);
       }
-      if (solvedRes.status === "fulfilled") {
-        setSolvedProblems(solvedRes.value.data);
-      }
-      setLoading(false);
     };
-    fetchData();
-  }, []);
 
-  const isSolved = (id) => solvedProblems.some((sp) => sp._id === id);
+    const fetchSolvedProblems = async () => {
+      try {
+        const { data } = await axiosClient.get('/problem/problemSolvedByUser');
+        setSolvedProblems(data);
+      } catch (error) {
+        console.error('Error fetching solved problems:', error);
+      }
+    };
 
-  const allTags = [...new Set(problems.map((p) => p.tags).filter(Boolean))];
+    fetchProblems();
+    if (user) fetchSolvedProblems();
+  }, [user]);
 
-  const filteredProblems = problems.filter((p) => {
-    const difficultyMatch =
-      filters.difficulty === "all" ||
-      (p.difficulty || "").toLowerCase() === filters.difficulty;
-    const tagMatch = filters.tag === "all" || p.tags === filters.tag;
-    const statusMatch =
-      filters.status === "all" ||
-      (filters.status === "solved" ? isSolved(p._id) : !isSolved(p._id));
+  const handleLogout = () => {
+    dispatch(logoutUser());
+    setSolvedProblems([]); // Clear solved problems on logout
+  };
+
+  const filteredProblems = problems.filter(problem => {
+    const difficultyMatch = filters.difficulty === 'all' || problem.difficulty === filters.difficulty;
+    const tagMatch = filters.tag === 'all' || problem.tags === filters.tag;
+    const statusMatch = filters.status === 'all' || 
+                      solvedProblems.some(sp => sp._id === problem._id);
     return difficultyMatch && tagMatch && statusMatch;
   });
 
-  const updateFilter = (key) => (e) =>
-    setFilters((prev) => ({ ...prev, [key]: e.target.value }));
-
   return (
     <div className="min-h-screen bg-base-200">
-      {/* Navbar */}
-      <div className="navbar bg-base-100 shadow-md px-4">
+      {/* Navigation Bar */}
+      <nav className="navbar bg-base-100 shadow-lg px-4">
         <div className="flex-1">
-          <Link to="/" className="btn btn-ghost text-xl">
-            Leetcode
-          </Link>
+          <NavLink to="/" className="btn btn-ghost text-xl">LeetCode</NavLink>
         </div>
-        <div className="flex-none gap-2">
-          {user?.role === "admin" && (
-            <Link to="/admin" className="btn btn-outline btn-sm">
-              Admin
-            </Link>
-          )}
+        <div className="flex-none gap-4">
           <div className="dropdown dropdown-end">
-            <div tabIndex={0} role="button" className="btn btn-ghost">
+            <div tabIndex={0} className="btn btn-ghost">
               {user?.firstName}
             </div>
-            <ul
-              tabIndex={0}
-              className="mt-3 p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-40 z-10"
-            >
-              <li>
-                <button onClick={() => dispatch(logoutUser())}>Logout</button>
-              </li>
+            <ul className="mt-3 p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
+              <li><button onClick={handleLogout}>Logout</button></li>
+              {user.role=='admin'&&<li><NavLink to="/admin">Admin</NavLink></li>}
             </ul>
           </div>
         </div>
-      </div>
+      </nav>
 
-      {/* Content */}
-      <div className="container mx-auto p-4 max-w-5xl">
-        <h2 className="text-2xl font-bold mb-4">Problems</h2>
-
+      {/* Main Content */}
+      <div className="container mx-auto p-4">
         {/* Filters */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          <select
+        <div className="flex flex-wrap gap-4 mb-6">
+          {/* New Status Filter */}
+          <select 
             className="select select-bordered"
             value={filters.status}
-            onChange={updateFilter("status")}
+            onChange={(e) => setFilters({...filters, status: e.target.value})}
           >
             <option value="all">All Problems</option>
-            <option value="solved">Solved</option>
-            <option value="unsolved">Unsolved</option>
+            <option value="solved">Solved Problems</option>
           </select>
 
-          <select
+          <select 
             className="select select-bordered"
             value={filters.difficulty}
-            onChange={updateFilter("difficulty")}
+            onChange={(e) => setFilters({...filters, difficulty: e.target.value})}
           >
             <option value="all">All Difficulties</option>
             <option value="easy">Easy</option>
@@ -122,63 +96,64 @@ function Homepage() {
             <option value="hard">Hard</option>
           </select>
 
-          <select
+          <select 
             className="select select-bordered"
             value={filters.tag}
-            onChange={updateFilter("tag")}
+            onChange={(e) => setFilters({...filters, tag: e.target.value})}
           >
             <option value="all">All Tags</option>
-            {allTags.map((tag) => (
-              <option key={tag} value={tag}>
-                {tag}
-              </option>
-            ))}
+            <option value="array">Array</option>
+            <option value="linkedList">Linked List</option>
+            <option value="graph">Graph</option>
+            <option value="dp">DP</option>
           </select>
         </div>
 
-        {/* Problem list */}
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <span className="loading loading-spinner loading-lg" />
-          </div>
-        ) : error ? (
-          <div className="alert alert-error">{error}</div>
-        ) : filteredProblems.length === 0 ? (
-          <p className="text-center opacity-70 py-10">No problems found.</p>
-        ) : (
-          <div className="grid gap-4">
-            {filteredProblems.map((problem) => (
-              <div key={problem._id} className="card bg-base-100 shadow-md">
-                <div className="card-body flex-row items-center justify-between">
-                  <div>
-                    <Link
-                      to={`/problem/${problem._id}`}
-                      className="card-title hover:text-primary"
-                    >
+        {/* Problems List */}
+        <div className="grid gap-4">
+          {filteredProblems.map(problem => (
+            <div key={problem._id} className="card bg-base-100 shadow-xl">
+              <div className="card-body">
+                <div className="flex items-center justify-between">
+                  <h2 className="card-title">
+                    <NavLink to={`/problem/${problem._id}`} className="hover:text-primary">
                       {problem.title}
-                    </Link>
-                    <div className="flex gap-2 mt-2">
-                      <span className={`badge ${difficultyColor(problem.difficulty)}`}>
-                        {problem.difficulty}
-                      </span>
-                      {problem.tags && (
-                        <span className="badge badge-info">{problem.tags}</span>
-                      )}
+                    </NavLink>
+                  </h2>
+                  {solvedProblems.some(sp => sp._id === problem._id) && (
+                    <div className="badge badge-success gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      Solved
                     </div>
-                  </div>
-                  {isSolved(problem._id) && (
-                    <span className="badge badge-success badge-outline">
-                      ✓ Solved
-                    </span>
                   )}
                 </div>
+                
+                <div className="flex gap-2">
+                  <div className={`badge ${getDifficultyBadgeColor(problem.difficulty)}`}>
+                    {problem.difficulty}
+                  </div>
+                  <div className="badge badge-info">
+                    {problem.tags}
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
+
+const getDifficultyBadgeColor = (difficulty) => {
+  switch (difficulty.toLowerCase()) {
+    case 'easy': return 'badge-success';
+    case 'medium': return 'badge-warning';
+    case 'hard': return 'badge-error';
+    default: return 'badge-neutral';
+  }
+};
 
 export default Homepage;
