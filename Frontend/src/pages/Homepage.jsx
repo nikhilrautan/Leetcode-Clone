@@ -156,5 +156,4 @@ const getDifficultyBadgeColor = (difficulty) => {
   }
 };
 
-
 export default Homepage;
