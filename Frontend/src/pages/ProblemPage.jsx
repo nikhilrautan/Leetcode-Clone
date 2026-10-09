@@ -437,7 +437,6 @@ const ProblemPage = () => {
               )}
             </div>
           )}
-
           {activeRightTab === 'result' && (
             <div className="flex-1 p-4 overflow-y-auto">
               <h3 className="font-semibold mb-4">Submission Result</h3>
