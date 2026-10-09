@@ -5,7 +5,6 @@ import { NavLink } from 'react-router';
 function Admin() {
   const [selectedOption, setSelectedOption] = useState(null);
 
-  
   const adminOptions = [
     {
       id: 'create',
