@@ -15,6 +15,7 @@ function Admin() {
       bgColor: 'bg-success/10',
       route: '/admin/create'
     },
+    
     {
       id: 'update',
       title: 'Update Problem',
