@@ -16,7 +16,6 @@ function ChatAi({problem}) {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    
     const onSubmit = async (data) => {
         
         setMessages(prev => [...prev, { role: 'user', parts:[{text: data.message}] }]);
