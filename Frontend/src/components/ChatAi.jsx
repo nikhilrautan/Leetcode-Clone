@@ -12,6 +12,7 @@ function ChatAi({problem}) {
     const { register, handleSubmit, reset,formState: {errors} } = useForm();
     const messagesEndRef = useRef(null);
 
+    
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
