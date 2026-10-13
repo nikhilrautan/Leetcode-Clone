@@ -9,7 +9,7 @@ function ChatAi({problem}) {
         { role: 'user', parts:[{text: "I am Good"}]}
     ]);
 
-    
+
     const { register, handleSubmit, reset,formState: {errors} } = useForm();
     const messagesEndRef = useRef(null);
 
@@ -83,5 +83,6 @@ function ChatAi({problem}) {
         </div>
     );
 }
+
 
 export default ChatAi;
