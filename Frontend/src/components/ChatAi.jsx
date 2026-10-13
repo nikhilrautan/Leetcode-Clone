@@ -84,5 +84,4 @@ function ChatAi({problem}) {
     );
 }
 
-
 export default ChatAi;
