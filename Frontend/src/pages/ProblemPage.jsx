@@ -38,7 +38,9 @@ const ProblemPage = () => {
         const response = await axiosClient.get(`/problem/problemById/${problemId}`);
        
         
-        const initialCode = response.data.startCode.find(sc => sc.language === langMap[selectedLanguage]).initialCode;
+        const initialCode = response.data.startCode?.find(
+  sc => sc.language?.toLowerCase() === langMap[selectedLanguage].toLowerCase()
+   )?.initialCode || '';
 
         setProblem(response.data);
         
@@ -57,8 +59,9 @@ const ProblemPage = () => {
   // Update code when language changes
   useEffect(() => {
     if (problem) {
-      const initialCode = problem.startCode.find(sc => sc.language === langMap[selectedLanguage]).initialCode;
-      setCode(initialCode);
+      const initialCode = response.data.startCode?.find(
+  sc => sc.language?.toLowerCase() === langMap[selectedLanguage].toLowerCase()
+)?.initialCode || '';
     }
   }, [selectedLanguage, problem]);
 
@@ -437,7 +440,7 @@ const ProblemPage = () => {
               )}
             </div>
           )}
-          
+
           {activeRightTab === 'result' && (
             <div className="flex-1 p-4 overflow-y-auto">
               <h3 className="font-semibold mb-4">Submission Result</h3>
