@@ -97,6 +97,7 @@ const ProblemPage = () => {
         success: false,
         error: 'Internal server error'
       });
+      
       setLoading(false);
       setActiveRightTab('testcase');
     }
