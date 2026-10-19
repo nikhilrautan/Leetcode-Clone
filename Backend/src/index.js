@@ -5,11 +5,13 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const cookieparser = require('cookie-parser');
-
+const authRouter = require("./routes/userAuth");
 const main = require('./config/db');
 const redisClient = require('./config/redis');
 const userAuth = require('./routes/userAuth');
 const problemRouter = require('./routes/problemCreator');
+const submitRouter = require("./routes/submit");
+const aiRouter = require("./routes/aiChatting");
 
 const app = express();
 
@@ -22,6 +24,8 @@ app.use(cookieparser());
 
 app.use('/user', userAuth);
 app.use('/problem', problemRouter);
+app.use('/submission', submitRouter);
+app.use('/ai',aiRouter);
 
 const InitalizeConnection = async () => {
     try {

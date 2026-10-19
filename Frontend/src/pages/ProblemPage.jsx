@@ -57,13 +57,17 @@ const ProblemPage = () => {
   }, [problemId]);
 
   // Update code when language changes
-  useEffect(() => {
-    if (problem) {
-      const initialCode = response.data.startCode?.find(
-  sc => sc.language?.toLowerCase() === langMap[selectedLanguage].toLowerCase()
-)?.initialCode || '';
-    }
-  }, [selectedLanguage, problem]);
+  // Update code when language changes
+useEffect(() => {
+  if (problem) {
+    const initialCode =
+      problem.startCode?.find(
+        (sc) => sc.language?.toLowerCase() === langMap[selectedLanguage]?.toLowerCase()
+      )?.initialCode || '';
+
+    setCode(initialCode);   // this line was missing
+  }
+}, [selectedLanguage, problem]);
 
   const handleEditorChange = (value) => {
     setCode(value || '');
@@ -215,7 +219,7 @@ const ProblemPage = () => {
                   <div className="mt-8">
                     <h3 className="text-lg font-semibold mb-4">Examples:</h3>
                     <div className="space-y-4">
-                      {problem.visibleTestCases.map((example, index) => (
+                     {(problem?.visibleTestCases ?? []).map((example, index) => (
                         <div key={index} className="bg-base-200 p-4 rounded-lg">
                           <h4 className="font-semibold mb-2">Example {index + 1}:</h4>
                           <div className="space-y-2 text-sm font-mono">
