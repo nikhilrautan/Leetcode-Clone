@@ -9,9 +9,9 @@ const solveDoubt = async(req , res)=>{
         const {messages,title,description,testCases,startCode} = req.body;
         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_KEY });
        
-        async function main() {
+       
         const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-3.5-flash",
         contents: messages,
         config: {
         systemInstruction: `
@@ -89,15 +89,13 @@ Remember: Your goal is to help users learn and understand DSA concepts through t
     });
     console.log(response.text);
     }
-
-    main();
       
-    }
-    catch(err){
-        res.status(500).json({
-            message: "Internal server error"
-        });
-    }
+   catch (err) {
+  console.error("API Error:", error.response?.data);  // add this line
+  res.status(500).json({
+    message: "Internal server error",
+    error: err.message,                  // temporary, remove after debugging
+  });
 }
-
+}
 module.exports = solveDoubt;
