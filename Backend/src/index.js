@@ -1,48 +1,52 @@
 const dns = require('dns');
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const cookieparser = require('cookie-parser');
-const main = require('./config/db');
-const redisClient = require('./config/redis');
-const userAuth = require('./routes/userAuth');
-const problemRouter = require('./routes/problemCreator');
-const aiRouter = require("./routes/aiChatting");
-// NOTE: submit router is intentionally NOT required here
-
+const express = require('express')
 const app = express();
+require('dotenv').config();
+const main =  require('./config/db')
+const cookieParser =  require('cookie-parser');
+const authRouter = require("./routes/userAuth");
+const redisClient = require('./config/redis');
+const problemRouter = require("./routes/problemCreator");
+const submitRouter = require("./routes/submit")
+const aiRouter = require("./routes/aiChatting")
+const videoRouter = require("./routes/videoCreator");
+const cors = require('cors')
+
+// console.log("Hello")
 
 app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true,
-}));
+    origin: 'http://localhost:5173',
+    credentials: true 
+}))
+
 app.use(express.json());
-app.use(cookieparser());
+app.use(cookieParser());
 
-app.use('/user', userAuth);
-app.use('/problem', problemRouter);
-app.use('/ai', aiRouter);
+app.use('/user',authRouter);
+app.use('/problem',problemRouter);
+app.use('/submission',submitRouter);
+app.use('/ai',aiRouter);
+app.use("/video",videoRouter);
 
-redisClient.on('error', (e) => console.error('Redis error:', e));
 
-const InitalizeConnection = async () => {
-    try {
-        await Promise.all([main(), redisClient.connect()]);
+const InitalizeConnection = async ()=>{
+    try{
+
+        await Promise.all([main(),redisClient.connect()]);
         console.log("DB Connected");
+        
+        app.listen(process.env.PORT, ()=>{
+            console.log("Server listening at port number: "+ process.env.PORT);
+        })
 
-        // Required only now, so the rate limiters are created after Redis is connected
-        const submitRouter = require('./routes/submit');
-        app.use('/submission', submitRouter);
-
-        app.listen(process.env.PORT, () => {
-            console.log("Server Listening at port number: " + process.env.PORT);
-        });
-    } catch (err) {
-        console.log("Error: " + err);
-        process.exit(1);
     }
-};
+    catch(err){
+        console.log("Error: "+err);
+    }
+}
+
 
 InitalizeConnection();
+
