@@ -257,5 +257,3 @@ const submittedProblem = async(req,res)=>{
 
 
 module.exports = {createProblem,updateProblem,deleteProblem,getProblemById,getAllProblem,solvedAllProblembyUser,submittedProblem};
-
-
