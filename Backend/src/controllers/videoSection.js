@@ -54,8 +54,6 @@ const generateUploadSignature = async (req, res) => {
 };
 
 
-
-
 const saveVideoMetadata = async (req, res) => {
   try {
     const {
