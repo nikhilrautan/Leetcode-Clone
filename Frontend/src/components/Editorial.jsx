@@ -103,4 +103,6 @@ const Editorial = ({ secureUrl, thumbnailUrl, duration }) => {
   );
 };
 
+
+
 export default Editorial;
