@@ -63,7 +63,6 @@ const Editorial = ({ secureUrl, thumbnailUrl, duration }) => {
         className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 transition-opacity ${
           isHovering || !isPlaying ? 'opacity-100' : 'opacity-0'
         }`}
-        
       >
         {/* Play/Pause Button */}
         <button
