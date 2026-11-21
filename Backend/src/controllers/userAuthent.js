@@ -35,8 +35,9 @@ const register = async (req, res) => {
         });
     }
     catch (err) {
-        res.status(400).send("Error: " + err);
-    }
+    console.log(err);
+    res.status(400).send("Error: " + err);
+}
 }
 
 // login feature

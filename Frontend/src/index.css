@@ -1,2 +1,138 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
 @import "tailwindcss";
-@plugin "daisyui";
+
+@plugin "daisyui" {
+  themes: false;
+}
+
+/* Dark theme (default) */
+@plugin "daisyui/theme" {
+  name: "codedark";
+  default: true;
+  prefersdark: true;
+  color-scheme: dark;
+
+  --color-base-100: oklch(21% 0.02 265);
+  --color-base-200: oklch(18% 0.02 265);
+  --color-base-300: oklch(15% 0.02 265);
+  --color-base-content: oklch(92% 0.01 265);
+
+  --color-primary: oklch(68% 0.19 275);
+  --color-primary-content: oklch(98% 0.01 275);
+  --color-secondary: oklch(70% 0.15 200);
+  --color-secondary-content: oklch(15% 0.02 200);
+  --color-accent: oklch(75% 0.17 160);
+  --color-accent-content: oklch(15% 0.02 160);
+  --color-neutral: oklch(28% 0.02 265);
+  --color-neutral-content: oklch(90% 0.01 265);
+
+  --color-info: oklch(72% 0.14 235);
+  --color-success: oklch(74% 0.17 155);
+  --color-warning: oklch(82% 0.16 85);
+  --color-error: oklch(68% 0.21 25);
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --border: 1px;
+}
+
+/* Light theme */
+@plugin "daisyui/theme" {
+  name: "codelight";
+  color-scheme: light;
+
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(97% 0.005 265);
+  --color-base-300: oklch(93% 0.01 265);
+  --color-base-content: oklch(25% 0.03 265);
+
+  --color-primary: oklch(55% 0.22 275);
+  --color-primary-content: oklch(98% 0.01 275);
+  --color-secondary: oklch(60% 0.15 200);
+  --color-secondary-content: oklch(98% 0.01 200);
+  --color-accent: oklch(65% 0.17 160);
+  --color-accent-content: oklch(15% 0.02 160);
+  --color-neutral: oklch(30% 0.03 265);
+  --color-neutral-content: oklch(95% 0.01 265);
+
+  --color-info: oklch(62% 0.16 235);
+  --color-success: oklch(62% 0.17 155);
+  --color-warning: oklch(75% 0.16 85);
+  --color-error: oklch(60% 0.22 25);
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --border: 1px;
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-base-200);
+    color: var(--color-base-content);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  /* Slim scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-neutral) transparent;
+  }
+}
+
+/* Plain CSS on purpose: Tailwind v4 cannot @apply a custom class,
+   and plain CSS in this layer still loses to utilities like max-w-4xl. */
+@layer components {
+  /* Page container */
+  .page-container {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 80rem;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 640px) {
+    .page-container {
+      padding-inline: 1.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .page-container {
+      padding-inline: 2rem;
+    }
+  }
+
+  /* Card surface */
+  .surface-card {
+    border-radius: var(--radius-box);
+    border: 1px solid var(--color-base-300);
+    background-color: var(--color-base-100);
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.08);
+    transition: border-color 200ms, box-shadow 200ms;
+  }
+
+  /* Gradient text for the logo */
+  .gradient-text {
+    background-image: linear-gradient(
+      to right,
+      var(--color-primary),
+      var(--color-secondary)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}

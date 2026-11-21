@@ -1,8 +1,9 @@
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useNavigate, NavLink } from 'react-router';
+import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import axiosClient from '../utils/axiosClient';
-import { useNavigate } from 'react-router';
 
 // Zod schema matching the problem schema
 const problemSchema = z.object({
@@ -37,13 +38,32 @@ const problemSchema = z.object({
   ).length(3, 'All three languages required')
 });
 
+const languageNames = ['C++', 'Java', 'JavaScript'];
+
+// Small presentational helper for validation messages
+const FieldError = ({ message }) =>
+  message ? <span className="mt-1 block text-sm text-error">{message}</span> : null;
+
+// Section wrapper used for each block of the form
+const Section = ({ title, description, children }) => (
+  <section className="surface-card p-6">
+    <div className="mb-5">
+      <h2 className="text-lg font-semibold">{title}</h2>
+      {description && (
+        <p className="mt-0.5 text-sm text-base-content/60">{description}</p>
+      )}
+    </div>
+    {children}
+  </section>
+);
+
 function AdminPanel() {
   const navigate = useNavigate();
   const {
     register,
     control,
     handleSubmit,
-    formState: { errors }
+    formState: { errors, isSubmitting }
   } = useForm({
     resolver: zodResolver(problemSchema),
     defaultValues: {
@@ -89,209 +109,256 @@ function AdminPanel() {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Create New Problem</h1>
-      
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Basic Information */}
-        <div className="card bg-base-100 shadow-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
-          <div className="space-y-4">
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Title</span>
-              </label>
-              <input
-                {...register('title')}
-                className={`input input-bordered ${errors.title && 'input-error'}`}
-              />
-              {errors.title && (
-                <span className="text-error">{errors.title.message}</span>
-              )}
-            </div>
+    <div className="min-h-screen bg-base-200">
+      <div className="page-container max-w-4xl py-8">
+        <NavLink to="/admin" className="btn btn-ghost btn-sm mb-6 gap-1.5">
+          <ArrowLeft size={16} />
+          Back to admin
+        </NavLink>
 
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Description</span>
-              </label>
-              <textarea
-                {...register('description')}
-                className={`textarea textarea-bordered h-32 ${errors.description && 'textarea-error'}`}
-              />
-              {errors.description && (
-                <span className="text-error">{errors.description.message}</span>
-              )}
-            </div>
-
-            <div className="flex gap-4">
-              <div className="form-control w-1/2">
-                <label className="label">
-                  <span className="label-text">Difficulty</span>
-                </label>
-                <select
-                  {...register('difficulty')}
-                  className={`select select-bordered ${errors.difficulty && 'select-error'}`}
-                >
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
-                </select>
-              </div>
-
-              <div className="form-control w-1/2">
-                <label className="label">
-                  <span className="label-text">Tag</span>
-                </label>
-                <select
-                  {...register('tags')}
-                  className={`select select-bordered ${errors.tags && 'select-error'}`}
-                >
-                  <option value="array">Array</option>
-                  <option value="linkedList">Linked List</option>
-                  <option value="graph">Graph</option>
-                  <option value="dp">DP</option>
-                </select>
-              </div>
-            </div>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">Create new problem</h1>
+          <p className="mt-1 text-base-content/60">
+            Fill in the details, test cases and code templates for the problem.
+          </p>
         </div>
 
-        {/* Test Cases */}
-        <div className="card bg-base-100 shadow-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Test Cases</h2>
-          
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Basic Information */}
+          <Section title="Basic information">
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="title" className="mb-1.5 block text-sm font-medium">
+                  Title
+                </label>
+                <input
+                  id="title"
+                  {...register('title')}
+                  className={`input input-bordered w-full ${errors.title ? 'input-error' : ''}`}
+                />
+                <FieldError message={errors.title?.message} />
+              </div>
+
+              <div>
+                <label htmlFor="description" className="mb-1.5 block text-sm font-medium">
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  {...register('description')}
+                  className={`textarea textarea-bordered h-40 w-full ${
+                    errors.description ? 'textarea-error' : ''
+                  }`}
+                />
+                <FieldError message={errors.description?.message} />
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="difficulty" className="mb-1.5 block text-sm font-medium">
+                    Difficulty
+                  </label>
+                  <select
+                    id="difficulty"
+                    {...register('difficulty')}
+                    className={`select select-bordered w-full ${
+                      errors.difficulty ? 'select-error' : ''
+                    }`}
+                  >
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="tags" className="mb-1.5 block text-sm font-medium">
+                    Tag
+                  </label>
+                  <select
+                    id="tags"
+                    {...register('tags')}
+                    className={`select select-bordered w-full ${errors.tags ? 'select-error' : ''}`}
+                  >
+                    <option value="array">Array</option>
+                    <option value="linkedList">Linked List</option>
+                    <option value="graph">Graph</option>
+                    <option value="dp">DP</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </Section>
+
           {/* Visible Test Cases */}
-          <div className="space-y-4 mb-6">
-            <div className="flex justify-between items-center">
-              <h3 className="font-medium">Visible Test Cases</h3>
+          <Section
+            title="Visible test cases"
+            description="Shown to users as examples and used by the Run button."
+          >
+            <div className="space-y-4">
+              {visibleFields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className="space-y-3 rounded-box border border-base-300 bg-base-200/50 p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Case {index + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeVisible(index)}
+                      className="btn btn-ghost btn-xs gap-1 text-error"
+                    >
+                      <Trash2 size={14} />
+                      Remove
+                    </button>
+                  </div>
+
+                  <div>
+                    <input
+                      {...register(`visibleTestCases.${index}.input`)}
+                      placeholder="Input"
+                      className="input input-bordered w-full font-mono text-sm"
+                    />
+                    <FieldError message={errors.visibleTestCases?.[index]?.input?.message} />
+                  </div>
+
+                  <div>
+                    <input
+                      {...register(`visibleTestCases.${index}.output`)}
+                      placeholder="Output"
+                      className="input input-bordered w-full font-mono text-sm"
+                    />
+                    <FieldError message={errors.visibleTestCases?.[index]?.output?.message} />
+                  </div>
+
+                  <div>
+                    <textarea
+                      {...register(`visibleTestCases.${index}.explanation`)}
+                      placeholder="Explanation"
+                      className="textarea textarea-bordered w-full"
+                    />
+                    <FieldError message={errors.visibleTestCases?.[index]?.explanation?.message} />
+                  </div>
+                </div>
+              ))}
+
+              <FieldError
+                message={errors.visibleTestCases?.message || errors.visibleTestCases?.root?.message}
+              />
+
               <button
                 type="button"
                 onClick={() => appendVisible({ input: '', output: '', explanation: '' })}
-                className="btn btn-sm btn-primary"
+                className="btn btn-outline btn-sm gap-1.5"
               >
-                Add Visible Case
+                <Plus size={16} />
+                Add visible case
               </button>
             </div>
-            
-            {visibleFields.map((field, index) => (
-              <div key={field.id} className="border p-4 rounded-lg space-y-2">
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => removeVisible(index)}
-                    className="btn btn-xs btn-error"
-                  >
-                    Remove
-                  </button>
-                </div>
-                
-                <input
-                  {...register(`visibleTestCases.${index}.input`)}
-                  placeholder="Input"
-                  className="input input-bordered w-full"
-                />
-                
-                <input
-                  {...register(`visibleTestCases.${index}.output`)}
-                  placeholder="Output"
-                  className="input input-bordered w-full"
-                />
-                
-                <textarea
-                  {...register(`visibleTestCases.${index}.explanation`)}
-                  placeholder="Explanation"
-                  className="textarea textarea-bordered w-full"
-                />
-              </div>
-            ))}
-          </div>
+          </Section>
 
           {/* Hidden Test Cases */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="font-medium">Hidden Test Cases</h3>
+          <Section
+            title="Hidden test cases"
+            description="Used to check submissions. Users never see these."
+          >
+            <div className="space-y-4">
+              {hiddenFields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className="space-y-3 rounded-box border border-base-300 bg-base-200/50 p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Case {index + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeHidden(index)}
+                      className="btn btn-ghost btn-xs gap-1 text-error"
+                    >
+                      <Trash2 size={14} />
+                      Remove
+                    </button>
+                  </div>
+
+                  <div>
+                    <input
+                      {...register(`hiddenTestCases.${index}.input`)}
+                      placeholder="Input"
+                      className="input input-bordered w-full font-mono text-sm"
+                    />
+                    <FieldError message={errors.hiddenTestCases?.[index]?.input?.message} />
+                  </div>
+
+                  <div>
+                    <input
+                      {...register(`hiddenTestCases.${index}.output`)}
+                      placeholder="Output"
+                      className="input input-bordered w-full font-mono text-sm"
+                    />
+                    <FieldError message={errors.hiddenTestCases?.[index]?.output?.message} />
+                  </div>
+                </div>
+              ))}
+
+              <FieldError
+                message={errors.hiddenTestCases?.message || errors.hiddenTestCases?.root?.message}
+              />
+
               <button
                 type="button"
                 onClick={() => appendHidden({ input: '', output: '' })}
-                className="btn btn-sm btn-primary"
+                className="btn btn-outline btn-sm gap-1.5"
               >
-                Add Hidden Case
+                <Plus size={16} />
+                Add hidden case
               </button>
             </div>
-            
-            {hiddenFields.map((field, index) => (
-              <div key={field.id} className="border p-4 rounded-lg space-y-2">
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => removeHidden(index)}
-                    className="btn btn-xs btn-error"
-                  >
-                    Remove
-                  </button>
-                </div>
-                
-                <input
-                  {...register(`hiddenTestCases.${index}.input`)}
-                  placeholder="Input"
-                  className="input input-bordered w-full"
-                />
-                
-                <input
-                  {...register(`hiddenTestCases.${index}.output`)}
-                  placeholder="Output"
-                  className="input input-bordered w-full"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
+          </Section>
 
-        {/* Code Templates */}
-        <div className="card bg-base-100 shadow-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Code Templates</h2>
-          
-          <div className="space-y-6">
-            {[0, 1, 2].map((index) => (
-              <div key={index} className="space-y-2">
-                <h3 className="font-medium">
-                  {index === 0 ? 'C++' : index === 1 ? 'Java' : 'JavaScript'}
-                </h3>
-                
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Initial Code</span>
-                  </label>
-                  <pre className="bg-base-300 p-4 rounded-lg">
+          {/* Code Templates */}
+          <Section
+            title="Code templates"
+            description="Provide the starter code and a full reference solution for each language."
+          >
+            <div className="space-y-8">
+              {[0, 1, 2].map((index) => (
+                <div key={index} className="space-y-4">
+                  <span className="badge badge-soft badge-primary font-medium">
+                    {languageNames[index]}
+                  </span>
+
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium">Initial code</label>
                     <textarea
                       {...register(`startCode.${index}.initialCode`)}
-                      className="w-full bg-transparent font-mono"
-                      rows={6}
+                      spellCheck={false}
+                      rows={8}
+                      className="textarea textarea-bordered w-full bg-base-300 font-mono text-sm leading-relaxed"
                     />
-                  </pre>
-                </div>
-                
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Reference Solution</span>
-                  </label>
-                  <pre className="bg-base-300 p-4 rounded-lg">
+                    <FieldError message={errors.startCode?.[index]?.initialCode?.message} />
+                  </div>
+
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium">Reference solution</label>
                     <textarea
                       {...register(`referenceSolution.${index}.completeCode`)}
-                      className="w-full bg-transparent font-mono"
-                      rows={6}
+                      spellCheck={false}
+                      rows={8}
+                      className="textarea textarea-bordered w-full bg-base-300 font-mono text-sm leading-relaxed"
                     />
-                  </pre>
+                    <FieldError message={errors.referenceSolution?.[index]?.completeCode?.message} />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
+              ))}
+            </div>
+          </Section>
 
-        <button type="submit" className="btn btn-primary w-full">
-          Create Problem
-        </button>
-      </form>
+          <button type="submit" className="btn btn-primary w-full" disabled={isSubmitting}>
+            {isSubmitting && <span className="loading loading-spinner loading-sm" />}
+            Create problem
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
