@@ -1,40 +1,41 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
 
 @import "tailwindcss";
+@source "./components";
 
 @plugin "daisyui" {
   themes: false;
 }
 
-/* Dark theme (default) */
+/* Dark theme (default): near-black surfaces, green accent */
 @plugin "daisyui/theme" {
   name: "codedark";
   default: true;
   prefersdark: true;
   color-scheme: dark;
 
-  --color-base-100: oklch(21% 0.02 265);
-  --color-base-200: oklch(18% 0.02 265);
-  --color-base-300: oklch(15% 0.02 265);
-  --color-base-content: oklch(92% 0.01 265);
+  --color-base-100: oklch(14.5% 0.006 265);
+  --color-base-200: oklch(10% 0.005 265);
+  --color-base-300: oklch(22% 0.008 265);
+  --color-base-content: oklch(96% 0.005 265);
 
-  --color-primary: oklch(68% 0.19 275);
-  --color-primary-content: oklch(98% 0.01 275);
-  --color-secondary: oklch(70% 0.15 200);
-  --color-secondary-content: oklch(15% 0.02 200);
-  --color-accent: oklch(75% 0.17 160);
-  --color-accent-content: oklch(15% 0.02 160);
-  --color-neutral: oklch(28% 0.02 265);
-  --color-neutral-content: oklch(90% 0.01 265);
+  --color-primary: oklch(72% 0.2 150);
+  --color-primary-content: oklch(15% 0.04 150);
+  --color-secondary: oklch(65% 0.22 295);
+  --color-secondary-content: oklch(98% 0.01 295);
+  --color-accent: oklch(85% 0.17 95);
+  --color-accent-content: oklch(20% 0.05 95);
+  --color-neutral: oklch(26% 0.01 265);
+  --color-neutral-content: oklch(92% 0.005 265);
 
-  --color-info: oklch(72% 0.14 235);
-  --color-success: oklch(74% 0.17 155);
-  --color-warning: oklch(82% 0.16 85);
-  --color-error: oklch(68% 0.21 25);
+  --color-info: oklch(70% 0.16 255);
+  --color-success: oklch(76% 0.19 155);
+  --color-warning: oklch(84% 0.17 90);
+  --color-error: oklch(66% 0.22 25);
 
   --radius-selector: 0.5rem;
-  --radius-field: 0.5rem;
-  --radius-box: 0.75rem;
+  --radius-field: 0.75rem;
+  --radius-box: 1rem;
   --border: 1px;
 }
 
@@ -44,27 +45,27 @@
   color-scheme: light;
 
   --color-base-100: oklch(100% 0 0);
-  --color-base-200: oklch(97% 0.005 265);
-  --color-base-300: oklch(93% 0.01 265);
-  --color-base-content: oklch(25% 0.03 265);
+  --color-base-200: oklch(97% 0.004 265);
+  --color-base-300: oklch(92% 0.008 265);
+  --color-base-content: oklch(22% 0.02 265);
 
-  --color-primary: oklch(55% 0.22 275);
-  --color-primary-content: oklch(98% 0.01 275);
-  --color-secondary: oklch(60% 0.15 200);
-  --color-secondary-content: oklch(98% 0.01 200);
-  --color-accent: oklch(65% 0.17 160);
-  --color-accent-content: oklch(15% 0.02 160);
-  --color-neutral: oklch(30% 0.03 265);
-  --color-neutral-content: oklch(95% 0.01 265);
+  --color-primary: oklch(58% 0.19 150);
+  --color-primary-content: oklch(98% 0.01 150);
+  --color-secondary: oklch(55% 0.22 295);
+  --color-secondary-content: oklch(98% 0.01 295);
+  --color-accent: oklch(72% 0.17 85);
+  --color-accent-content: oklch(20% 0.05 85);
+  --color-neutral: oklch(30% 0.02 265);
+  --color-neutral-content: oklch(95% 0.005 265);
 
-  --color-info: oklch(62% 0.16 235);
-  --color-success: oklch(62% 0.17 155);
-  --color-warning: oklch(75% 0.16 85);
-  --color-error: oklch(60% 0.22 25);
+  --color-info: oklch(58% 0.17 255);
+  --color-success: oklch(60% 0.18 155);
+  --color-warning: oklch(72% 0.16 80);
+  --color-error: oklch(58% 0.22 25);
 
   --radius-selector: 0.5rem;
-  --radius-field: 0.5rem;
-  --radius-box: 0.75rem;
+  --radius-field: 0.75rem;
+  --radius-box: 1rem;
   --border: 1px;
 }
 
@@ -97,7 +98,6 @@
 /* Plain CSS on purpose: Tailwind v4 cannot @apply a custom class,
    and plain CSS in this layer still loses to utilities like max-w-4xl. */
 @layer components {
-  /* Page container */
   .page-container {
     margin-inline: auto;
     width: 100%;
@@ -115,7 +115,6 @@
     }
   }
 
-  /* Card surface */
   .surface-card {
     border-radius: var(--radius-box);
     border: 1px solid var(--color-base-300);
@@ -124,7 +123,6 @@
     transition: border-color 200ms, box-shadow 200ms;
   }
 
-  /* Gradient text for the logo */
   .gradient-text {
     background-image: linear-gradient(
       to right,

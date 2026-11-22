@@ -12,7 +12,12 @@ const problemRouter = require("./routes/problemCreator");
 const submitRouter = require("./routes/submit")
 const aiRouter = require("./routes/aiChatting")
 const videoRouter = require("./routes/videoCreator");
-const cors = require('cors')
+const cors = require('cors');
+const groupRouter = require('./routes/Group');
+
+console.log('goal:', typeof require('./routes/Goal'));
+console.log('feed:', typeof require('./routes/Feed'));
+console.log('post:', typeof require('./routes/Post'));
 
 // console.log("Hello")
 
@@ -29,6 +34,10 @@ app.use('/problem',problemRouter);
 app.use('/submission',submitRouter);
 app.use('/ai',aiRouter);
 app.use("/video",videoRouter);
+app.use('/group', require('./routes/Group'));
+app.use('/goal', require('./routes/Goal'));
+app.use('/feed', require('./routes/Feed'));
+app.use('/post', require('./routes/Post'));
 
 
 const InitalizeConnection = async ()=>{

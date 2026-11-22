@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
-import { useParams, NavLink } from 'react-router';
+import { useParams } from 'react-router';
 import {
-  ArrowLeft,
   FileText,
   BookOpen,
   Lightbulb,
@@ -14,8 +13,6 @@ import {
   CheckCircle2,
   XCircle,
   Code2,
-  Sun,
-  Moon,
   Clock,
   MemoryStick,
 } from 'lucide-react';
@@ -95,15 +92,21 @@ const ProblemPage = () => {
   const editorRef = useRef(null);
   let { problemId } = useParams();
 
-  // UI-only: theme (shared with Homepage via localStorage)
+  // UI-only: follow the theme set by the app layout (for the Monaco editor)
   const [theme, setTheme] = useState(
-    () => localStorage.getItem('theme') || 'codedark'
+    () => document.documentElement.getAttribute('data-theme') || 'codedark'
   );
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+    const observer = new MutationObserver(() =>
+      setTheme(document.documentElement.getAttribute('data-theme') || 'codedark')
+    );
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const fetchProblem = async () => {
@@ -230,29 +233,7 @@ const ProblemPage = () => {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-base-200">
-      {/* Top bar */}
-      <header className="flex h-12 shrink-0 items-center justify-between border-b border-base-300 bg-base-100 px-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <NavLink to="/" className="btn btn-ghost btn-sm gap-1.5">
-            <ArrowLeft size={16} />
-            <span className="hidden sm:inline">Problems</span>
-          </NavLink>
-          {problem && (
-            <span className="hidden truncate text-sm font-medium text-base-content/70 md:inline">
-              {problem.title}
-            </span>
-          )}
-        </div>
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm btn-circle"
-          aria-label="Toggle theme"
-          onClick={() => setTheme(theme === 'codedark' ? 'codelight' : 'codedark')}
-        >
-          {theme === 'codedark' ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
-      </header>
+    <div className="flex h-[calc(100vh-3.5rem)] flex-col bg-base-200">
 
       <div className="flex min-h-0 flex-1 flex-col gap-2 p-2 lg:flex-row">
         {/* Left Panel */}
@@ -294,7 +275,7 @@ const ProblemPage = () => {
                       <div className="space-y-4">
                         {(problem?.visibleTestCases ?? []).map((example, index) => (
                           <div key={index} className="rounded-box border border-base-300 bg-base-200 p-4">
-                            <h4 className="mb-3 text-sm font-semibold">Example {index + 1}</h4>
+                            <h4 className="mb-3 text-sm font-semibold text-warning">Example {index + 1}</h4>
                             <div className="space-y-2 font-mono text-sm">
                               <div><span className="text-base-content/50">Input: </span>{example.input}</div>
                               <div><span className="text-base-content/50">Output: </span>{example.output}</div>
@@ -374,11 +355,11 @@ const ProblemPage = () => {
               <div className="flex min-h-0 flex-1 flex-col">
                 {/* Language Selector */}
                 <div className="flex items-center justify-between border-b border-base-300 px-4 py-2">
-                  <div className="join">
+                  <div className="flex gap-2">
                     {['javascript', 'java', 'cpp'].map((lang) => (
                       <button
                         key={lang}
-                        className={`btn btn-sm join-item ${selectedLanguage === lang ? 'btn-primary' : 'btn-ghost border-base-300'}`}
+                        className={`btn btn-sm rounded-full ${selectedLanguage === lang ? 'btn-primary' : 'btn-ghost'}`}
                         onClick={() => handleLanguageChange(lang)}
                       >
                         {lang === 'cpp' ? 'C++' : lang === 'javascript' ? 'JavaScript' : 'Java'}
@@ -395,7 +376,15 @@ const ProblemPage = () => {
                     value={code}
                     onChange={handleEditorChange}
                     onMount={handleEditorDidMount}
-                    theme={theme === 'codedark' ? 'vs-dark' : 'light'}
+                    beforeMount={(monaco) =>
+                      monaco.editor.defineTheme('smart-dark', {
+                        base: 'vs-dark',
+                        inherit: true,
+                        rules: [],
+                        colors: { 'editor.background': '#0a0b0d' },
+                      })
+                    }
+                    theme={theme === 'codedark' ? 'smart-dark' : 'light'}
                     options={{
                       fontSize: 14,
                       fontFamily: "'JetBrains Mono', monospace",

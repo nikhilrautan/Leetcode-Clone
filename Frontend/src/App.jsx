@@ -2,6 +2,10 @@ import { Routes, Route, Navigate } from "react-router";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Homepage from "./pages/Homepage";
+import Dashboard from "./pages/Dashboard";
+import AlgoVisualiser from "./pages/AlgoVisualiser";
+import Goals from "./pages/Goals";
+import InterviewPrep from "./pages/InterviewPrep";
 import { useDispatch, useSelector } from "react-redux";
 import { checkAuth } from "./store/authSlice";
 import { useEffect } from "react";
@@ -11,7 +15,12 @@ import Admin from "./pages/Admin";
 import AdminVideo from "./components/AdminVideo";
 import AdminDelete from "./components/AdminDelete";
 import AdminUpload from "./components/AdminUpload";
+import AppLayout from "./components/AppLayout";
+import ComingSoon from "./components/ComingSoon";
 import { Code2 } from "lucide-react";
+import Feed from "./pages/Feed";
+import Group from "./pages/Group";
+import Leaderboard from "./pages/Leaderboard";
 
 function App() {
   const dispatch = useDispatch();
@@ -38,16 +47,28 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={isAuthenticated ? <Homepage /> : <Navigate to="/signup" />} />
       <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login />} />
       <Route path="/signup" element={isAuthenticated ? <Navigate to="/" /> : <Signup />} />
-      <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/" />} />
-      <Route path="/admin/create" element={isAdmin ? <AdminPanel /> : <Navigate to="/" />} />
-      <Route path="/admin/delete" element={isAdmin ? <AdminDelete /> : <Navigate to="/" />} />
-      <Route path="/admin/video" element={isAdmin ? <AdminVideo /> : <Navigate to="/" />} />
-      <Route path="/admin/upload/:problemId" element={isAdmin ? <AdminUpload /> : <Navigate to="/" />} />
-      <Route path="/problem/:problemId" element={<ProblemPage />} />
-    </Routes>
+
+      {/* Pages that share the top bar and sidebar */}
+      <Route element={isAuthenticated ? <AppLayout /> : <Navigate to="/signup" />}>
+  <Route path="/" element={<Homepage />} />
+  <Route path="/dashboard" element={<Dashboard />} />
+  <Route path="/feed" element={<Feed />} />
+  <Route path="/algo-visualiser" element={<AlgoVisualiser />} />
+  <Route path="/group" element={<Group />} />
+  <Route path="/goals" element={<Goals />} />
+  <Route path="/interview-prep" element={<InterviewPrep />} />
+  <Route path="/dsa-arena" element={<ComingSoon page="arena" />} />
+  <Route path="/problem/:problemId" element={<ProblemPage />} />
+  <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/" />} />
+  <Route path="/admin/create" element={isAdmin ? <AdminPanel /> : <Navigate to="/" />} />
+  <Route path="/admin/delete" element={isAdmin ? <AdminDelete /> : <Navigate to="/" />} />
+  <Route path="/admin/video" element={isAdmin ? <AdminVideo /> : <Navigate to="/" />} />
+  <Route path="/admin/upload/:problemId" element={isAdmin ? <AdminUpload /> : <Navigate to="/" />} />
+  <Route path="/leaderboard" element={<Leaderboard />} />
+</Route>
+ </Routes>
   );
 }
 

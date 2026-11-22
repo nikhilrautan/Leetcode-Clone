@@ -150,4 +150,26 @@ const deleteProfile = async (req, res) => {
     }
 }
 
-module.exports = { register, login, logout, getProfile, adminRegister, deleteProfile };
+const getLeaderboard = async (req, res) => {
+  try {
+    const XP = { easy: 10, medium: 20, hard: 40 };
+    const users = await User.find({}, 'firstName problemSolved')
+      .populate('problemSolved', 'difficulty');
+
+    const board = users
+      .map((u) => ({
+        _id: u._id,
+        name: u.firstName,
+        solved: u.problemSolved.length,
+        xp: u.problemSolved.reduce((sum, p) => sum + (XP[p?.difficulty] || 0), 0),
+      }))
+      .sort((a, b) => b.xp - a.xp || b.solved - a.solved)
+      .slice(0, 50);
+
+    res.json(board);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { register, login, logout, getProfile, adminRegister, deleteProfile ,getLeaderboard};

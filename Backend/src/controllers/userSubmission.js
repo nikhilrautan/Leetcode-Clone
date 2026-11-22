@@ -24,6 +24,8 @@ const submitCode = async (req,res)=>{
       
     //    Fetch the problem from database
        const problem =  await Problem.findById(problemId);
+       if(!problem)
+        return res.status(404).send("Problem not found");
     //    testcases(Hidden)
     
     //   Kya apne submission store kar du pehle....
@@ -114,6 +116,30 @@ const submitCode = async (req,res)=>{
     }
 }
 
+// Submissions per day for the last 7 days (oldest first). Used by the dashboard chart.
+const getActivity = async (req, res) => {
+  try {
+    const since = new Date();
+    since.setHours(0, 0, 0, 0);
+    since.setDate(since.getDate() - 6);
+
+    const subs = await Submission.find(
+      { userId: req.result._id, createdAt: { $gte: since } },
+      'createdAt'
+    );
+
+    const counts = Array(7).fill(0);
+    subs.forEach((s) => {
+      const d = new Date(s.createdAt);
+      d.setHours(0, 0, 0, 0);
+      const i = Math.round((d - since) / 86400000);
+      if (i >= 0 && i < 7) counts[i]++;
+    });
+    res.json(counts);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 const runCode = async(req,res)=>{
     
@@ -129,6 +155,8 @@ const runCode = async(req,res)=>{
 
    //    Fetch the problem from database
       const problem =  await Problem.findById(problemId);
+      if(!problem)
+        return res.status(404).send("Problem not found");
    //    testcases(Hidden)
       if(language==='cpp')
         language='c++'
@@ -190,26 +218,4 @@ const runCode = async(req,res)=>{
 }
 
 
-module.exports = {submitCode,runCode};
-
-
-
-//     language_id: 54,
-//     stdin: '2 3',
-//     expected_output: '5',
-//     stdout: '5',
-//     status_id: 3,
-//     created_at: '2025-05-12T16:47:37.239Z',
-//     finished_at: '2025-05-12T16:47:37.695Z',
-//     time: '0.002',
-//     memory: 904,
-//     stderr: null,
-//     token: '611405fa-4f31-44a6-99c8-6f407bc14e73',
-
-
-// User.findByIdUpdate({
-// })
-
-//const user =  User.findById(id)
-// user.firstName = "Mohit";
-// await user.save();
+module.exports = {submitCode, runCode, getActivity};
