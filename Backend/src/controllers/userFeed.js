@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Post = require('../models/post');
 const Problem = require('../models/problem');
+const User = require('../models/user');
 
 const POPULATE = [
   { path: 'userId', select: 'firstName' },
@@ -33,21 +34,13 @@ const serverError = (res, err) => {
 // GET /feed?page=1
 const getFeed = async (req, res) => {
   try {
-    const page = Math.max(parseInt(req.query.page) || 1, 1);
-    const limit = 20;
-
     const posts = await Post.find()
       .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit + 1)
-      .populate(POPULATE);
-
-    res.status(200).json({
-      posts: posts.slice(0, limit).map((p) => shapePost(p, req.result._id)),
-      hasMore: posts.length > limit,
-    });
+      .limit(50)
+      .populate({ path: 'userId', select: 'firstName', model: User });
+    res.json(posts);
   } catch (err) {
-    serverError(res, err);
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -152,4 +145,4 @@ const deletePost = async (req, res) => {
   }
 };
 
-module.exports = { getFeed, createPost, toggleLike, addComment, deletePost };
+module.exports = { getFeed, createPost, toggleLike, addComment, deletePost  };
