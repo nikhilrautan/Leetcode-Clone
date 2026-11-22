@@ -21,6 +21,7 @@ import { Code2 } from "lucide-react";
 import Feed from "./pages/Feed";
 import Group from "./pages/Group";
 import Leaderboard from "./pages/Leaderboard";
+import Landing from "./pages/Landing";
 
 function App() {
   const dispatch = useDispatch();
@@ -45,30 +46,31 @@ function App() {
 
   const isAdmin = isAuthenticated && user?.role === "admin";
 
-  return (
+    return (
     <Routes>
-      <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login />} />
-      <Route path="/signup" element={isAuthenticated ? <Navigate to="/" /> : <Signup />} />
+      <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} />
+      <Route path="/signup" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Signup />} />
+      <Route path="/welcome" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Landing />} />
 
       {/* Pages that share the top bar and sidebar */}
-      <Route element={isAuthenticated ? <AppLayout /> : <Navigate to="/signup" />}>
-  <Route path="/" element={<Homepage />} />
-  <Route path="/dashboard" element={<Dashboard />} />
-  <Route path="/feed" element={<Feed />} />
-  <Route path="/algo-visualiser" element={<AlgoVisualiser />} />
-  <Route path="/group" element={<Group />} />
-  <Route path="/goals" element={<Goals />} />
-  <Route path="/interview-prep" element={<InterviewPrep />} />
-  <Route path="/dsa-arena" element={<ComingSoon page="arena" />} />
-  <Route path="/problem/:problemId" element={<ProblemPage />} />
-  <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/" />} />
-  <Route path="/admin/create" element={isAdmin ? <AdminPanel /> : <Navigate to="/" />} />
-  <Route path="/admin/delete" element={isAdmin ? <AdminDelete /> : <Navigate to="/" />} />
-  <Route path="/admin/video" element={isAdmin ? <AdminVideo /> : <Navigate to="/" />} />
-  <Route path="/admin/upload/:problemId" element={isAdmin ? <AdminUpload /> : <Navigate to="/" />} />
-  <Route path="/leaderboard" element={<Leaderboard />} />
-</Route>
- </Routes>
+      <Route element={isAuthenticated ? <AppLayout /> : <Navigate to="/welcome" />}>
+        <Route path="/" element={<Homepage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/feed" element={<Feed />} />
+        <Route path="/algo-visualiser" element={<AlgoVisualiser />} />
+        <Route path="/group" element={<Group />} />
+        <Route path="/goals" element={<Goals />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/interview-prep" element={<InterviewPrep />} />
+        <Route path="/dsa-arena" element={<ComingSoon page="arena" />} />
+        <Route path="/problem/:problemId" element={<ProblemPage />} />
+        <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/" />} />
+        <Route path="/admin/create" element={isAdmin ? <AdminPanel /> : <Navigate to="/" />} />
+        <Route path="/admin/delete" element={isAdmin ? <AdminDelete /> : <Navigate to="/" />} />
+        <Route path="/admin/video" element={isAdmin ? <AdminVideo /> : <Navigate to="/" />} />
+        <Route path="/admin/upload/:problemId" element={isAdmin ? <AdminUpload /> : <Navigate to="/" />} />
+      </Route>
+    </Routes>
   );
 }
 

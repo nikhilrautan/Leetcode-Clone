@@ -72,8 +72,14 @@ function Dashboard() {
   const stats = useMemo(() => {
     const total = { easy: 0, medium: 0, hard: 0 };
     const done = { easy: 0, medium: 0, hard: 0 };
-    all.forEach((p) => { if (total[p.difficulty] !== undefined) total[p.difficulty]++; });
-    solved.forEach((p) => { if (done[p.difficulty] !== undefined) done[p.difficulty]++; });
+    all.forEach((p) => {
+      const d = p.difficulty?.toLowerCase();
+      if (total[d] !== undefined) total[d]++;
+    });
+    solved.forEach((p) => {
+      const d = p.difficulty?.toLowerCase();
+      if (done[d] !== undefined) done[d]++;
+    });
     const xp = done.easy * XP.easy + done.medium * XP.medium + done.hard * XP.hard;
     const solvedIds = new Set(solved.map((p) => p._id));
     return {

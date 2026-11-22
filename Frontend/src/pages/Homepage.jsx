@@ -4,19 +4,32 @@ import { useSelector } from 'react-redux';
 import { Search, CheckCircle2, SearchX, Shuffle } from 'lucide-react';
 import axiosClient from '../utils/axiosClient';
 
+// Keys are lowercase; tags from the database are lowercased before lookup
 const tagDot = {
   array: 'bg-warning',
-  linkedList: 'bg-info',
+  linkedlist: 'bg-info',
   graph: 'bg-secondary',
   dp: 'bg-accent',
+  string: 'bg-success',
+  queue: 'bg-error',
 };
 
 const tagLabel = {
   array: 'Array',
-  linkedList: 'Linked List',
+  linkedlist: 'Linked List',
   graph: 'Graph',
   dp: 'DP',
+  string: 'String',
+  queue: 'Queue',
 };
+
+// tags can be a string or an array in the database
+const tagsOf = (problem) =>
+  (Array.isArray(problem.tags) ? problem.tags : [problem.tags])
+    .filter(Boolean)
+    .map((t) => String(t).toLowerCase());
+
+const rankOf = (problem) => difficultyRank[problem.difficulty?.toLowerCase()] || 0;
 
 const difficultyRank = { easy: 1, medium: 2, hard: 3 };
 
@@ -84,8 +97,9 @@ function Homepage() {
   const filteredProblems = useMemo(() => {
     const list = problems.filter((problem) => {
       const difficultyMatch =
-        filters.difficulty === 'all' || problem.difficulty === filters.difficulty;
-      const tagMatch = filters.tag === 'all' || problem.tags === filters.tag;
+        filters.difficulty === 'all' ||
+        problem.difficulty?.toLowerCase() === filters.difficulty;
+      const tagMatch = filters.tag === 'all' || tagsOf(problem).includes(filters.tag);
       const statusMatch =
         filters.status === 'all' ||
         (filters.status === 'solved' && solvedIds.has(problem._id)) ||
@@ -97,9 +111,9 @@ function Homepage() {
     });
 
     if (sort === 'easiest') {
-      list.sort((a, b) => (difficultyRank[a.difficulty] || 0) - (difficultyRank[b.difficulty] || 0));
+      list.sort((a, b) => rankOf(a) - rankOf(b));
     } else if (sort === 'hardest') {
-      list.sort((a, b) => (difficultyRank[b.difficulty] || 0) - (difficultyRank[a.difficulty] || 0));
+      list.sort((a, b) => rankOf(b) - rankOf(a));
     } else if (sort === 'title') {
       list.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
     }
@@ -206,9 +220,11 @@ function Homepage() {
             >
               <option value="all">All Tags</option>
               <option value="array">Array</option>
-              <option value="linkedList">Linked List</option>
+              <option value="linkedlist">Linked List</option>
               <option value="graph">Graph</option>
               <option value="dp">DP</option>
+              <option value="string">String</option>
+              <option value="queue">Queue</option>
             </select>
 
             <select
@@ -261,7 +277,7 @@ function Homepage() {
                 ) : (
                   <span
                     className={`h-3 w-3 shrink-0 rounded-full ${
-                      tagDot[problem.tags] || 'bg-base-content/30'
+                      tagDot[tagsOf(problem)[0]] || 'bg-base-content/30'
                     }`}
                   />
                 )}
@@ -271,7 +287,7 @@ function Homepage() {
                 </span>
 
                 <span className="hidden text-xs text-base-content/50 sm:inline">
-                  {tagLabel[problem.tags] || problem.tags}
+                  {tagsOf(problem).map((t) => tagLabel[t] || t).join(', ')}
                 </span>
 
                 <span

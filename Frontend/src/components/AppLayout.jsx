@@ -17,6 +17,7 @@ import {
   Moon,
 } from 'lucide-react';
 import { logoutUser } from '../store/authSlice';
+import { Trophy } from "lucide-react";
 
 // Change this to your project name
 const APP_NAME = 'LeetCode';
