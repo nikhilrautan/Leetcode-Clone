@@ -22,6 +22,7 @@ import Feed from "./pages/Feed";
 import Group from "./pages/Group";
 import Leaderboard from "./pages/Leaderboard";
 import Landing from "./pages/Landing";
+import GroupDetail from "./pages/GroupDetail";
 
 function App() {
   const dispatch = useDispatch();
@@ -57,6 +58,7 @@ function App() {
         <Route path="/" element={<Homepage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/feed" element={<Feed />} />
+        <Route path="/group/:id" element={<GroupDetail />} />
         <Route path="/algo-visualiser" element={<AlgoVisualiser />} />
         <Route path="/group" element={<Group />} />
         <Route path="/goals" element={<Goals />} />
