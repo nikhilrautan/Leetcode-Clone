@@ -1,14 +1,32 @@
 import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router';
-import { ArrowLeft, Trash2, CircleAlert, TriangleAlert, X, Inbox } from 'lucide-react';
-import axiosClient from '../utils/axiosClient'
+import { ArrowLeft, Trash2, CircleAlert, TriangleAlert, X, Inbox, RefreshCw } from 'lucide-react';
+import axiosClient from '../utils/axiosClient';
+
+// Pull a readable message out of an axios error
+const getErrorMessage = (err, fallback) => {
+  const data = err?.response?.data;
+  if (typeof data === 'string' && data.trim()) return data;
+  if (data?.message) return data.message;
+  return fallback;
+};
+
+const getDifficultyBadge = (difficulty) => {
+  switch (difficulty?.toLowerCase()) {
+    case 'easy': return 'badge-success';
+    case 'medium': return 'badge-warning';
+    case 'hard': return 'badge-error';
+    default: return 'badge-neutral';
+  }
+};
 
 const AdminDelete = () => {
   const [problems, setProblems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [fetchFailed, setFetchFailed] = useState(false);
 
-  // UI-only state for the confirm dialog
+  // Confirm dialog state
   const [problemToDelete, setProblemToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -19,10 +37,13 @@ const AdminDelete = () => {
   const fetchProblems = async () => {
     try {
       setLoading(true);
+      setError(null);
+      setFetchFailed(false);
       const { data } = await axiosClient.get('/problem/getAllProblem');
-      setProblems(data);
+      setProblems(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError('Failed to fetch problems');
+      setFetchFailed(true);
+      setError(getErrorMessage(err, 'Failed to fetch problems'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -32,10 +53,11 @@ const AdminDelete = () => {
   const handleDelete = async (id) => {
     try {
       setDeleting(true);
+      setError(null);
       await axiosClient.delete(`/problem/delete/${id}`);
-      setProblems(problems.filter(problem => problem._id !== id));
+      setProblems((prev) => prev.filter((problem) => problem._id !== id));
     } catch (err) {
-      setError('Failed to delete problem');
+      setError(getErrorMessage(err, 'Failed to delete problem'));
       console.error(err);
     } finally {
       setDeleting(false);
@@ -43,14 +65,8 @@ const AdminDelete = () => {
     }
   };
 
-  const getDifficultyBadge = (difficulty) => {
-    switch (difficulty?.toLowerCase()) {
-      case 'easy': return 'badge-success';
-      case 'medium': return 'badge-warning';
-      case 'hard': return 'badge-error';
-      default: return 'badge-neutral';
-    }
-  };
+  const getTags = (problem) =>
+    Array.isArray(problem.tags) ? problem.tags : problem.tags ? [problem.tags] : [];
 
   if (loading) {
     return (
@@ -92,7 +108,15 @@ const AdminDelete = () => {
         {problems.length === 0 ? (
           <div className="surface-card flex flex-col items-center gap-3 px-6 py-16 text-center">
             <Inbox size={36} className="text-base-content/40" />
-            <p className="font-semibold">No problems to delete</p>
+            <p className="font-semibold">
+              {fetchFailed ? 'Could not load problems' : 'No problems to delete'}
+            </p>
+            {fetchFailed && (
+              <button className="btn btn-outline btn-sm gap-1.5" onClick={fetchProblems}>
+                <RefreshCw size={15} />
+                Retry
+              </button>
+            )}
           </div>
         ) : (
           <div className="surface-card overflow-x-auto">
@@ -121,7 +145,13 @@ const AdminDelete = () => {
                       </span>
                     </td>
                     <td>
-                      <span className="badge badge-soft badge-info">{problem.tags}</span>
+                      <div className="flex flex-wrap gap-1">
+                        {getTags(problem).map((tag) => (
+                          <span key={tag} className="badge badge-soft badge-info">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     </td>
                     <td className="text-right">
                       <button

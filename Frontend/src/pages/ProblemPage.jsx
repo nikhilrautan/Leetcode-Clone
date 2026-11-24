@@ -97,17 +97,40 @@ const StatTile = ({ icon: Icon, label, value }) => (
   </div>
 );
 
+// FIX: compare case-insensitively (database stores 'Easy', 'Medium', 'Hard')
+const getDifficultyBadge = (difficulty) => {
+  switch (difficulty?.toLowerCase()) {
+    case 'easy': return 'badge-success';
+    case 'medium': return 'badge-warning';
+    case 'hard': return 'badge-error';
+    default: return 'badge-neutral';
+  }
+};
+
+const getLanguageForMonaco = (lang) => {
+  switch (lang) {
+    case 'javascript': return 'javascript';
+    case 'java': return 'java';
+    case 'cpp': return 'cpp';
+    default: return 'javascript';
+  }
+};
+
 const ProblemPage = () => {
   const [problem, setProblem] = useState(null);
   const [selectedLanguage, setSelectedLanguage] = useState('javascript');
   const [code, setCode] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [runResult, setRunResult] = useState(null);
   const [submitResult, setSubmitResult] = useState(null);
   const [activeLeftTab, setActiveLeftTab] = useState('description');
   const [activeRightTab, setActiveRightTab] = useState('code');
   const editorRef = useRef(null);
   let { problemId } = useParams();
+
+  const busy = running || submitting;
 
   // UI-only: follow the theme set by the app layout (for the Monaco editor)
   const [theme, setTheme] = useState(
@@ -127,13 +150,9 @@ const ProblemPage = () => {
 
   useEffect(() => {
     const fetchProblem = async () => {
-      setLoading(true);
+      setPageLoading(true);
       try {
         const response = await axiosClient.get(`/problem/problemById/${problemId}`);
-
-        // Debug: check what the backend actually returns for examples
-        console.log('Problem data:', response.data);
-        console.log('Examples found:', getExamples(response.data));
 
         const initialCode = response.data.startCode?.find(
           sc => sc.language?.toLowerCase() === langMap[selectedLanguage].toLowerCase()
@@ -141,14 +160,14 @@ const ProblemPage = () => {
 
         setProblem(response.data);
         setCode(initialCode);
-        setLoading(false);
       } catch (error) {
         console.error(
           'Error fetching problem:',
           error.response?.status,
           error.response?.data || error.message
         );
-        setLoading(false);
+      } finally {
+        setPageLoading(false);
       }
     };
 
@@ -180,7 +199,7 @@ const ProblemPage = () => {
   };
 
   const handleRun = async () => {
-    setLoading(true);
+    setRunning(true);
     setRunResult(null);
 
     try {
@@ -191,9 +210,6 @@ const ProblemPage = () => {
 
       console.log('Run response:', response.data);
       setRunResult(response.data);
-      setLoading(false);
-      setActiveRightTab('testcase');
-
     } catch (error) {
       console.error(
         'Error running code:',
@@ -204,14 +220,14 @@ const ProblemPage = () => {
         success: false,
         error: getErrorMessage(error)
       });
-
-      setLoading(false);
+    } finally {
+      setRunning(false);
       setActiveRightTab('testcase');
     }
   };
 
   const handleSubmitCode = async () => {
-    setLoading(true);
+    setSubmitting(true);
     setSubmitResult(null);
 
     try {
@@ -222,9 +238,6 @@ const ProblemPage = () => {
 
       console.log('Submit response:', response.data);
       setSubmitResult(response.data);
-      setLoading(false);
-      setActiveRightTab('result');
-
     } catch (error) {
       console.error(
         'Error submitting code:',
@@ -238,30 +251,13 @@ const ProblemPage = () => {
         passedTestCases: 0,
         totalTestCases: 0
       });
-      setLoading(false);
+    } finally {
+      setSubmitting(false);
       setActiveRightTab('result');
     }
   };
 
-  const getLanguageForMonaco = (lang) => {
-    switch (lang) {
-      case 'javascript': return 'javascript';
-      case 'java': return 'java';
-      case 'cpp': return 'cpp';
-      default: return 'javascript';
-    }
-  };
-
-  const getDifficultyBadge = (difficulty) => {
-    switch (difficulty) {
-      case 'easy': return 'badge-success';
-      case 'medium': return 'badge-warning';
-      case 'hard': return 'badge-error';
-      default: return 'badge-neutral';
-    }
-  };
-
-  if (loading && !problem) {
+  if (pageLoading && !problem) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-base-200">
         <span className="loading loading-dots loading-lg text-primary"></span>
@@ -271,6 +267,9 @@ const ProblemPage = () => {
 
   const examples = getExamples(problem);
   const tags = Array.isArray(problem?.tags) ? problem.tags : problem?.tags ? [problem.tags] : [];
+  const difficultyLabel = problem?.difficulty
+    ? problem.difficulty.charAt(0).toUpperCase() + problem.difficulty.slice(1)
+    : '';
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] flex-col bg-base-200">
@@ -301,7 +300,7 @@ const ProblemPage = () => {
                     <h1 className="text-2xl font-bold tracking-tight">{problem.title}</h1>
                     <div className="mb-6 mt-3 flex flex-wrap items-center gap-2">
                       <span className={`badge badge-soft font-medium ${getDifficultyBadge(problem.difficulty)}`}>
-                        {problem.difficulty?.charAt(0).toUpperCase() + problem.difficulty?.slice(1)}
+                        {difficultyLabel}
                       </span>
                       {tags.map((tag) => (
                         <span key={tag} className="badge badge-soft badge-info">{tag}</span>
@@ -357,20 +356,24 @@ const ProblemPage = () => {
                 {activeLeftTab === 'solutions' && (
                   <div>
                     <h2 className="mb-4 text-xl font-bold">Solutions</h2>
-                    <div className="space-y-6">
-                      {problem.referenceSolution?.map((solution, index) => (
-                        <div key={index} className="overflow-hidden rounded-box border border-base-300">
-                          <div className="border-b border-base-300 bg-base-200 px-4 py-2">
-                            <h3 className="text-sm font-semibold">{problem?.title} - {solution?.language}</h3>
+                    {problem.referenceSolution?.length > 0 ? (
+                      <div className="space-y-6">
+                        {problem.referenceSolution.map((solution, index) => (
+                          <div key={index} className="overflow-hidden rounded-box border border-base-300">
+                            <div className="border-b border-base-300 bg-base-200 px-4 py-2">
+                              <h3 className="text-sm font-semibold">{problem?.title} - {solution?.language}</h3>
+                            </div>
+                            <div className="p-4">
+                              <pre className="overflow-x-auto rounded bg-base-300 p-4 font-mono text-sm">
+                                <code>{solution?.completeCode}</code>
+                              </pre>
+                            </div>
                           </div>
-                          <div className="p-4">
-                            <pre className="overflow-x-auto rounded bg-base-300 p-4 font-mono text-sm">
-                              <code>{solution?.completeCode}</code>
-                            </pre>
-                          </div>
-                        </div>
-                      )) || <p className="text-base-content/60">Solutions will be available after you solve the problem.</p>}
-                    </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-base-content/60">Solutions will be available after you solve the problem.</p>
+                    )}
                   </div>
                 )}
 
@@ -482,17 +485,17 @@ const ProblemPage = () => {
                     <button
                       className="btn btn-outline btn-sm gap-2"
                       onClick={handleRun}
-                      disabled={loading}
+                      disabled={busy}
                     >
-                      {loading ? <span className="loading loading-spinner loading-xs" /> : <Play size={15} />}
+                      {running ? <span className="loading loading-spinner loading-xs" /> : <Play size={15} />}
                       Run
                     </button>
                     <button
                       className="btn btn-primary btn-sm gap-2"
                       onClick={handleSubmitCode}
-                      disabled={loading}
+                      disabled={busy}
                     >
-                      {loading ? <span className="loading loading-spinner loading-xs" /> : <Send size={15} />}
+                      {submitting ? <span className="loading loading-spinner loading-xs" /> : <Send size={15} />}
                       Submit
                     </button>
                   </div>
