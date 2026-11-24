@@ -28,6 +28,12 @@ const waiting = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Step 1: Submit a batch of code submissions -> returns array of tokens
 const submitBatch = async (submissions) => {
+
+    // Judge0 rejects empty batches, so fail early with a clear message
+    if (!Array.isArray(submissions) || submissions.length === 0) {
+        throw new Error('No test cases to run: the problem has no test cases.');
+    }
+
     const options = {
         method: 'POST',
         url: 'https://ce.judge0.com/submissions/batch',
@@ -54,7 +60,10 @@ const submitBatch = async (submissions) => {
     // 1: In Queue
     // 2: Processing
     // 3: Accepted
-    // 4+: Wrong Answer / Compilation Error / Runtime Error / TLE etc.
+    // 4: Wrong Answer
+    // 5: Time Limit Exceeded
+    // 6: Compilation Error
+    // 7+: Runtime errors
 };
 
 // Step 2: Poll using tokens until all submissions finish -> returns final results

@@ -41,6 +41,23 @@ const rightTabs = [
   { id: 'result', label: 'Result', icon: CheckCircle2 },
 ];
 
+// Pull a readable message out of an axios error (instead of a generic string)
+const getErrorMessage = (error) => {
+  const data = error?.response?.data;
+  if (typeof data === 'string' && data.trim()) return data;
+  if (data?.message) return data.message;
+  if (data?.error) return typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+  if (error?.response?.status) return `Request failed with status ${error.response.status}`;
+  return error?.message || 'Something went wrong. Please try again.';
+};
+
+// Backend may send examples under different names; support the common ones
+const getExamples = (problem) =>
+  problem?.visibleTestCases ??
+  problem?.visibleTestcases ??
+  problem?.examples ??
+  [];
+
 // Small presentational helper for one test case row
 const TestCaseCard = ({ tc, index, passed }) => (
   <div className="rounded-box border border-base-300 bg-base-100 p-3">
@@ -112,21 +129,25 @@ const ProblemPage = () => {
     const fetchProblem = async () => {
       setLoading(true);
       try {
-
         const response = await axiosClient.get(`/problem/problemById/${problemId}`);
 
+        // Debug: check what the backend actually returns for examples
+        console.log('Problem data:', response.data);
+        console.log('Examples found:', getExamples(response.data));
 
         const initialCode = response.data.startCode?.find(
           sc => sc.language?.toLowerCase() === langMap[selectedLanguage].toLowerCase()
         )?.initialCode || '';
 
         setProblem(response.data);
-
         setCode(initialCode);
         setLoading(false);
-
       } catch (error) {
-        console.error('Error fetching problem:', error);
+        console.error(
+          'Error fetching problem:',
+          error.response?.status,
+          error.response?.data || error.message
+        );
         setLoading(false);
       }
     };
@@ -168,15 +189,20 @@ const ProblemPage = () => {
         language: selectedLanguage
       });
 
+      console.log('Run response:', response.data);
       setRunResult(response.data);
       setLoading(false);
       setActiveRightTab('testcase');
 
     } catch (error) {
-      console.error('Error running code:', error);
+      console.error(
+        'Error running code:',
+        error.response?.status,
+        error.response?.data || error.message
+      );
       setRunResult({
         success: false,
-        error: 'Internal server error'
+        error: getErrorMessage(error)
       });
 
       setLoading(false);
@@ -194,13 +220,24 @@ const ProblemPage = () => {
         language: selectedLanguage
       });
 
+      console.log('Submit response:', response.data);
       setSubmitResult(response.data);
       setLoading(false);
       setActiveRightTab('result');
 
     } catch (error) {
-      console.error('Error submitting code:', error);
-      setSubmitResult(null);
+      console.error(
+        'Error submitting code:',
+        error.response?.status,
+        error.response?.data || error.message
+      );
+      // Show the failure in the Result tab instead of failing silently
+      setSubmitResult({
+        accepted: false,
+        error: getErrorMessage(error),
+        passedTestCases: 0,
+        totalTestCases: 0
+      });
       setLoading(false);
       setActiveRightTab('result');
     }
@@ -232,6 +269,9 @@ const ProblemPage = () => {
     );
   }
 
+  const examples = getExamples(problem);
+  const tags = Array.isArray(problem?.tags) ? problem.tags : problem?.tags ? [problem.tags] : [];
+
   return (
     <div className="flex h-[calc(100vh-3.5rem)] flex-col bg-base-200">
 
@@ -261,9 +301,11 @@ const ProblemPage = () => {
                     <h1 className="text-2xl font-bold tracking-tight">{problem.title}</h1>
                     <div className="mb-6 mt-3 flex flex-wrap items-center gap-2">
                       <span className={`badge badge-soft font-medium ${getDifficultyBadge(problem.difficulty)}`}>
-                        {problem.difficulty.charAt(0).toUpperCase() + problem.difficulty.slice(1)}
+                        {problem.difficulty?.charAt(0).toUpperCase() + problem.difficulty?.slice(1)}
                       </span>
-                      <span className="badge badge-soft badge-info">{problem.tags}</span>
+                      {tags.map((tag) => (
+                        <span key={tag} className="badge badge-soft badge-info">{tag}</span>
+                      ))}
                     </div>
 
                     <div className="max-w-prose whitespace-pre-wrap text-sm leading-relaxed text-base-content/90">
@@ -273,16 +315,33 @@ const ProblemPage = () => {
                     <div className="mt-8">
                       <h3 className="mb-4 text-lg font-semibold">Examples</h3>
                       <div className="space-y-4">
-                        {(problem?.visibleTestCases ?? []).map((example, index) => (
-                          <div key={index} className="rounded-box border border-base-300 bg-base-200 p-4">
-                            <h4 className="mb-3 text-sm font-semibold text-warning">Example {index + 1}</h4>
-                            <div className="space-y-2 font-mono text-sm">
-                              <div><span className="text-base-content/50">Input: </span>{example.input}</div>
-                              <div><span className="text-base-content/50">Output: </span>{example.output}</div>
-                              <div><span className="text-base-content/50">Explanation: </span>{example.explanation}</div>
-                            </div>
+                        {examples.length === 0 ? (
+                          <div className="rounded-box border border-dashed border-base-300 p-6 text-center text-sm text-base-content/60">
+                            No examples have been added for this problem yet.
                           </div>
-                        ))}
+                        ) : (
+                          examples.map((example, index) => (
+                            <div key={index} className="rounded-box border border-base-300 bg-base-200 p-4">
+                              <h4 className="mb-3 text-sm font-semibold text-warning">Example {index + 1}</h4>
+                              <div className="space-y-2 font-mono text-sm">
+                                <div>
+                                  <span className="text-base-content/50">Input: </span>
+                                  <span className="whitespace-pre-wrap">{example.input}</span>
+                                </div>
+                                <div>
+                                  <span className="text-base-content/50">Output: </span>
+                                  <span className="whitespace-pre-wrap">{example.output}</span>
+                                </div>
+                                {example.explanation && (
+                                  <div>
+                                    <span className="text-base-content/50">Explanation: </span>
+                                    {example.explanation}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        )}
                       </div>
                     </div>
                   </div>
@@ -452,9 +511,11 @@ const ProblemPage = () => {
                         All test cases passed
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 text-lg font-semibold text-error">
-                        <XCircle size={22} />
-                        {runResult.error || 'Some test cases failed'}
+                      <div className="flex items-start gap-2 text-lg font-semibold text-error">
+                        <XCircle size={22} className="mt-0.5 shrink-0" />
+                        <span className="whitespace-pre-wrap break-words">
+                          {runResult.error || 'Some test cases failed'}
+                        </span>
                       </div>
                     )}
 
@@ -495,9 +556,11 @@ const ProblemPage = () => {
                         Accepted
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 text-xl font-bold text-error">
-                        <XCircle size={24} />
-                        {submitResult.error}
+                      <div className="flex items-start gap-2 text-xl font-bold text-error">
+                        <XCircle size={24} className="mt-0.5 shrink-0" />
+                        <span className="whitespace-pre-wrap break-words">
+                          {submitResult.error || 'Submission failed'}
+                        </span>
                       </div>
                     )}
 
@@ -505,12 +568,12 @@ const ProblemPage = () => {
                       <div className="mb-2 flex items-baseline justify-between text-sm">
                         <span className="font-medium">Test cases passed</span>
                         <span className="text-base-content/60">
-                          {submitResult.passedTestCases}/{submitResult.totalTestCases}
+                          {submitResult.passedTestCases ?? 0}/{submitResult.totalTestCases ?? 0}
                         </span>
                       </div>
                       <progress
                         className={`progress w-full ${submitResult.accepted ? 'progress-success' : 'progress-error'}`}
-                        value={submitResult.passedTestCases}
+                        value={submitResult.passedTestCases ?? 0}
                         max={submitResult.totalTestCases || 1}
                       ></progress>
                     </div>

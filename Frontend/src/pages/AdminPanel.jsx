@@ -5,12 +5,13 @@ import { useNavigate, NavLink } from 'react-router';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import axiosClient from '../utils/axiosClient';
 
-// Zod schema matching the problem schema
+// Zod schema matching the backend problem schema.
+// Values here MUST match the enums in Backend/src/models/problem.js exactly.
 const problemSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().min(1, 'Description is required'),
-  difficulty: z.enum(['easy', 'medium', 'hard']),
-  tags: z.enum(['array', 'linkedList', 'graph', 'dp']),
+  difficulty: z.enum(['Easy', 'Medium', 'Hard']),
+  tags: z.enum(['Array', 'LinkedList', 'graph', 'String', 'dp', 'queue']),
   visibleTestCases: z.array(
     z.object({
       input: z.string().min(1, 'Input is required'),
@@ -67,6 +68,8 @@ function AdminPanel() {
   } = useForm({
     resolver: zodResolver(problemSchema),
     defaultValues: {
+      difficulty: 'Easy',
+      tags: 'Array',
       startCode: [
         { language: 'C++', initialCode: '' },
         { language: 'Java', initialCode: '' },
@@ -104,8 +107,19 @@ function AdminPanel() {
       alert('Problem created successfully!');
       navigate('/');
     } catch (error) {
-      alert(`Error: ${error.response?.data?.message || error.message}`);
+      // The backend usually replies with a plain text message
+      const serverData = error.response?.data;
+      const message =
+        typeof serverData === 'string' && serverData
+          ? serverData
+          : serverData?.message || error.message;
+      alert(`Error: ${message}`);
     }
+  };
+
+  // Show validation problems that are not attached to a visible field
+  const onInvalid = (formErrors) => {
+    console.warn('Form validation errors:', formErrors);
   };
 
   return (
@@ -123,7 +137,7 @@ function AdminPanel() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
           {/* Basic Information */}
           <Section title="Basic information">
             <div className="space-y-4">
@@ -165,9 +179,9 @@ function AdminPanel() {
                       errors.difficulty ? 'select-error' : ''
                     }`}
                   >
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Hard">Hard</option>
                   </select>
                 </div>
 
@@ -180,10 +194,12 @@ function AdminPanel() {
                     {...register('tags')}
                     className={`select select-bordered w-full ${errors.tags ? 'select-error' : ''}`}
                   >
-                    <option value="array">Array</option>
-                    <option value="linkedList">Linked List</option>
+                    <option value="Array">Array</option>
+                    <option value="LinkedList">Linked List</option>
                     <option value="graph">Graph</option>
+                    <option value="String">String</option>
                     <option value="dp">DP</option>
+                    <option value="queue">Queue</option>
                   </select>
                 </div>
               </div>
@@ -318,7 +334,7 @@ function AdminPanel() {
           {/* Code Templates */}
           <Section
             title="Code templates"
-            description="Provide the starter code and a full reference solution for each language."
+            description="Starter code and a full reference solution for each language. Both must read input from stdin and print the result, because the judge runs them as complete programs."
           >
             <div className="space-y-8">
               {[0, 1, 2].map((index) => (

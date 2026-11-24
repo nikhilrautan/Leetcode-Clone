@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { useSelector } from 'react-redux';
-import { Flame, Trophy, ArrowRight, Target, Camera, ImagePlus, Trash2, Type, X, Check } from 'lucide-react';
+import {
+  Flame, Trophy, ArrowRight, Target, Camera, ImagePlus, Trash2, Type, X, Check,
+  Plus, Minus, Zap, Rocket, Shield, Skull, Gem, Crown, Lock, Sparkles,
+  TrendingUp, CalendarDays, Gauge, ChevronRight,
+} from 'lucide-react';
 import axiosClient from '../utils/axiosClient';
 
 const XP = { easy: 10, medium: 20, hard: 40 };
 const COLORS = { easy: '#10b981', medium: '#f59e0b', hard: '#f43f5e' };
+const DIFFS = ['easy', 'medium', 'hard'];
+const RANKS = ['Rookie', 'Apprentice', 'Coder', 'Hacker', 'Architect', 'Legend'];
 
 const AVATARS = [
   { e: '🦊', g: '#ff8a3d,#ff4d6d' },
@@ -25,31 +31,81 @@ const greeting = () => {
   return 'Good evening';
 };
 
+/* ---------------- Count-up hook ---------------- */
+function useCountUp(target, ms = 700) {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { setV(target); return undefined; }
+    let raf;
+    let start;
+    const tick = (t) => {
+      if (start === undefined) start = t;
+      const p = Math.min(1, (t - start) / ms);
+      setV(Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, ms]);
+  return v;
+}
+
 /* ---------------- Donut ---------------- */
-function Donut({ counts, total }) {
+// Each difficulty owns an arc sized by how many problems exist.
+// The solved part fills that arc, so the ring has structure even at 0 solved.
+function Donut({ counts, totals, total, active, onHover }) {
   const r = 54;
   const C = 2 * Math.PI * r;
-  let offset = 0;
+  const gap = total > 0 ? 3 : 0;
+  let start = 0;
   const solved = counts.easy + counts.medium + counts.hard;
   return (
-    <svg viewBox="0 0 140 140" className="h-44 w-44 -rotate-90" role="img" aria-label={`${solved} of ${total} solved`}>
-      <circle cx="70" cy="70" r={r} fill="none" stroke="currentColor" strokeOpacity="0.1" strokeWidth="14" />
+    <svg
+      viewBox="0 0 140 140"
+      className="h-44 w-44 -rotate-90"
+      role="img"
+      aria-label={`${solved} of ${total} solved`}
+      onMouseLeave={() => onHover(null)}
+    >
+      <circle cx="70" cy="70" r={r} fill="none" stroke="currentColor" strokeOpacity="0.06" strokeWidth="14" />
       {total > 0 &&
-        ['easy', 'medium', 'hard'].map((k) => {
-          const len = (counts[k] / total) * C;
-          const el = (
-            <circle
-              key={k}
-              cx="70" cy="70" r={r} fill="none"
-              stroke={COLORS[k]} strokeWidth="14" strokeLinecap="butt"
-              strokeDasharray={`${len} ${C - len}`}
-              strokeDashoffset={-offset}
-            />
+        DIFFS.map((k) => {
+          const arc = Math.max(0, (totals[k] / total) * C - gap);
+          const fill = totals[k] ? arc * (counts[k] / totals[k]) : 0;
+          const off = -start;
+          start += (totals[k] / total) * C;
+          const dim = active && active !== k;
+          const w = active === k ? 18 : 14;
+          return (
+            <g key={k} onMouseEnter={() => onHover(k)} style={{ opacity: dim ? 0.3 : 1, transition: 'opacity .2s' }}>
+              <circle
+                cx="70" cy="70" r={r} fill="none" stroke={COLORS[k]} strokeOpacity="0.2"
+                strokeWidth={w} strokeDasharray={`${arc} ${C - arc}`} strokeDashoffset={off}
+                style={{ transition: 'stroke-width .2s' }}
+              />
+              <circle
+                cx="70" cy="70" r={r} fill="none" stroke={COLORS[k]}
+                strokeWidth={w} strokeDasharray={`${fill} ${C - fill}`} strokeDashoffset={off}
+                style={{ transition: 'stroke-dasharray .7s ease, stroke-width .2s' }}
+              />
+            </g>
           );
-          offset += len;
-          return el;
         })}
     </svg>
+  );
+}
+
+/* ---------------- Small stat tile ---------------- */
+function Stat({ icon: Icon, label, value, suffix = '', text, tone = 'text-primary' }) {
+  const n = useCountUp(typeof value === 'number' ? value : 0);
+  return (
+    <div className="rounded-xl border border-base-300 bg-base-200/40 p-4 transition hover:border-base-content/20">
+      <div className="mb-2 flex items-center gap-2 text-sm text-base-content/60">
+        <Icon size={15} className={tone} /> {label}
+      </div>
+      <p className="text-2xl font-bold tabular-nums">{text ?? `${n}${suffix}`}</p>
+    </div>
   );
 }
 
@@ -230,6 +286,13 @@ function Dashboard() {
   const [solved, setSolved] = useState([]);
   const [activity, setActivity] = useState(Array(7).fill(0));
   const [loading, setLoading] = useState(true);
+  const [ready, setReady] = useState(false); // lets the chart bars grow in once data is here
+
+  const [hoverDiff, setHoverDiff] = useState(null); // donut + legend highlight
+  const [queueFilter, setQueueFilter] = useState('all'); // up-next filter
+  const [goal, setGoal] = useState(() => {
+    try { return Math.min(10, Math.max(1, +localStorage.getItem('dashDailyGoal') || 2)); } catch { return 2; }
+  });
 
   const photoKey = `profilePhoto:${user?._id || 'me'}`;
   const [photo, setPhoto] = useState(() => {
@@ -250,6 +313,14 @@ function Dashboard() {
     try { await axiosClient.put('/user/profilePhoto', { photo: next }); } catch { /* endpoint optional */ }
     setToast(msg);
     setTimeout(() => setToast(''), 2200);
+  };
+
+  const changeGoal = (delta) => {
+    setGoal((g) => {
+      const next = Math.min(10, Math.max(1, g + delta));
+      try { localStorage.setItem('dashDailyGoal', String(next)); } catch { /* ignore */ }
+      return next;
+    });
   };
 
   useEffect(() => {
@@ -273,6 +344,12 @@ function Dashboard() {
     })();
   }, []);
 
+  useEffect(() => {
+    if (loading) return undefined;
+    const id = requestAnimationFrame(() => setReady(true));
+    return () => cancelAnimationFrame(id);
+  }, [loading]);
+
   const stats = useMemo(() => {
     const total = { easy: 0, medium: 0, hard: 0 };
     const done = { easy: 0, medium: 0, hard: 0 };
@@ -286,13 +363,14 @@ function Dashboard() {
     });
     const xp = done.easy * XP.easy + done.medium * XP.medium + done.hard * XP.hard;
     const solvedIds = new Set(solved.map((p) => p._id));
+    const unsolved = all.filter((p) => !solvedIds.has(p._id));
     return {
-      total, done, xp,
+      total, done, xp, unsolved,
       allCount: all.length,
       solvedCount: solved.length,
       level: Math.floor(xp / 100) + 1,
       levelPct: xp % 100,
-      next: all.find((p) => !solvedIds.has(p._id)),
+      next: unsolved[0],
     };
   }, [all, solved]);
 
@@ -306,13 +384,67 @@ function Dashboard() {
     () => Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - (6 - i));
-      return d.toLocaleDateString('en', { weekday: 'short' });
+      return {
+        short: d.toLocaleDateString('en', { weekday: 'short' }),
+        long: d.toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' }),
+      };
     }),
     []
   );
-  const maxAct = Math.max(1, ...activity);
+
+  const week = useMemo(() => {
+    const total = activity.reduce((a, b) => a + b, 0);
+    const max = Math.max(0, ...activity);
+    return {
+      total,
+      max,
+      activeDays: activity.filter((n) => n > 0).length,
+      goalHits: activity.filter((n) => n >= goal).length,
+      bestIdx: max > 0 ? activity.indexOf(max) : -1,
+    };
+  }, [activity, goal]);
+
+  const scale = Math.max(week.max, goal, 1) * 1.2;
+
+  const queue = useMemo(
+    () => stats.unsolved
+      .filter((p) => queueFilter === 'all' || p.difficulty?.toLowerCase() === queueFilter)
+      .slice(0, 4),
+    [stats.unsolved, queueFilter]
+  );
+
+  const completion = stats.allCount ? Math.round((stats.solvedCount / stats.allCount) * 100) : 0;
+  const hardest = stats.done.hard ? 'Hard' : stats.done.medium ? 'Medium' : stats.done.easy ? 'Easy' : 'None yet';
+
+  const badges = useMemo(() => [
+    { id: 'first', icon: Zap, title: 'First solve', desc: 'Solve your first problem', cur: stats.solvedCount, need: 1 },
+    { id: 'three', icon: Rocket, title: 'Warming up', desc: 'Solve 3 problems', cur: stats.solvedCount, need: 3 },
+    { id: 'streak', icon: Flame, title: 'On a roll', desc: 'Reach a 3-day streak', cur: streak, need: 3 },
+    { id: 'medium', icon: Shield, title: 'Mid-level clear', desc: 'Solve a medium problem', cur: stats.done.medium, need: 1 },
+    { id: 'hard', icon: Skull, title: 'Hard mode', desc: 'Solve a hard problem', cur: stats.done.hard, need: 1 },
+    { id: 'xp', icon: Gem, title: 'Level 2', desc: 'Earn 100 XP', cur: stats.xp, need: 100 },
+    { id: 'grind', icon: Target, title: 'Busy week', desc: 'Make 10 submissions in a week', cur: week.total, need: 10 },
+    { id: 'sweep', icon: Crown, title: 'Full board', desc: 'Solve every problem', cur: stats.solvedCount, need: Math.max(stats.allCount, 1), locked: stats.allCount === 0 },
+  ].map((b) => ({ ...b, done: !b.locked && b.cur >= b.need })), [stats, streak, week.total]);
+  const unlocked = badges.filter((b) => b.done).length;
+
   const name = user?.firstName || 'Coder';
   const initial = name[0]?.toUpperCase();
+  const rank = RANKS[Math.min(stats.level - 1, RANKS.length - 1)];
+
+  const headline = loading
+    ? 'Loading your progress...'
+    : stats.solvedCount === 0
+      ? 'Nothing solved yet. Start with an easy one to get on the board.'
+      : stats.solvedCount === stats.allCount && stats.allCount > 0
+        ? 'You have cleared every problem. Nice work.'
+        : `${stats.solvedCount} down, ${stats.allCount - stats.solvedCount} to go.`;
+
+  // Donut center shows the hovered difficulty, otherwise the overall total
+  const centerNum = hoverDiff ? stats.done[hoverDiff] : stats.solvedCount;
+  const centerLabel = hoverDiff
+    ? `of ${stats.total[hoverDiff]} ${hoverDiff}`
+    : `of ${stats.allCount} solved`;
 
   // Spinning gradient ring; inner content counter-rotates so the photo stays upright
   const spin = { animationDuration: '6s' };
@@ -321,44 +453,79 @@ function Dashboard() {
   return (
     <div className="page-container max-w-6xl space-y-6 py-8">
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Hero */}
+        {/* Progress overview */}
         <section className="surface-card relative overflow-hidden p-6 sm:p-8 lg:col-span-2">
           <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
-          <span className="pointer-events-none absolute right-6 top-4 origin-[70%_80%] animate-[wave_2.2s_ease-in-out_3] text-6xl sm:text-7xl" aria-hidden="true">👋</span>
-          <p className="text-sm text-base-content/60">{greeting()},</p>
-          <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl">{name}</h1>
 
-          <div className="flex flex-col items-center gap-6 sm:flex-row sm:gap-10">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-base-content/60">{greeting()},</p>
+              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">{name}</h1>
+              <p className="mt-2 max-w-md text-sm text-base-content/60">{headline}</p>
+            </div>
+            <div className="hidden shrink-0 items-center gap-2 rounded-full border border-base-300 bg-base-200/60 px-3 py-1.5 text-sm font-medium sm:flex">
+              <Sparkles size={15} className="text-primary" />
+              {rank}
+              <span className="text-base-content/50">Lv {stats.level}</span>
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-col items-center gap-6 sm:flex-row sm:gap-10">
             <div className="relative shrink-0">
-              <Donut counts={stats.done} total={stats.allCount} />
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-bold">{loading ? '–' : stats.solvedCount}</span>
-                <span className="text-xs text-base-content/60">of {stats.allCount} solved</span>
+              <Donut
+                counts={stats.done}
+                totals={stats.total}
+                total={stats.allCount}
+                active={hoverDiff}
+                onHover={setHoverDiff}
+              />
+              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-3xl font-bold tabular-nums">{loading ? '–' : centerNum}</span>
+                <span className="text-xs capitalize text-base-content/60">{centerLabel}</span>
               </div>
             </div>
 
-            <div className="w-full space-y-4">
-              {['easy', 'medium', 'hard'].map((k) => (
-                <div key={k}>
-                  <div className="mb-1 flex justify-between text-sm">
-                    <span className="flex items-center gap-2 capitalize">
-                      <span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS[k] }} />
-                      {k}
-                    </span>
-                    <span className="text-base-content/60">{stats.done[k]} / {stats.total[k]}</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-base-300">
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${stats.total[k] ? (stats.done[k] / stats.total[k]) * 100 : 0}%`,
-                        background: COLORS[k],
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
+            <div className="w-full space-y-2">
+              {DIFFS.map((k) => {
+                const pct = stats.total[k] ? (stats.done[k] / stats.total[k]) * 100 : 0;
+                const on = hoverDiff === k;
+                return (
+                  <button
+                    key={k}
+                    type="button"
+                    onMouseEnter={() => setHoverDiff(k)}
+                    onMouseLeave={() => setHoverDiff(null)}
+                    onFocus={() => setHoverDiff(k)}
+                    onBlur={() => setHoverDiff(null)}
+                    className={`block w-full rounded-xl px-3 py-2.5 text-left transition ${on ? 'bg-base-200' : 'hover:bg-base-200/60'}`}
+                  >
+                    <div className="mb-1.5 flex justify-between text-sm">
+                      <span className="flex items-center gap-2 capitalize">
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS[k] }} />
+                        {k}
+                      </span>
+                      <span className="tabular-nums text-base-content/60">
+                        {stats.done[k]} / {stats.total[k]}
+                        <span className="ml-2 text-xs text-base-content/40">{Math.round(pct)}%</span>
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-base-300">
+                      <div
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{ width: ready ? `${pct}%` : '0%', background: COLORS[k] }}
+                      />
+                    </div>
+                  </button>
+                );
+              })}
             </div>
+          </div>
+
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Stat icon={Gauge} label="Completion" value={completion} suffix="%" />
+            <Stat icon={Zap} label="XP earned" value={stats.xp} tone="text-warning" />
+            <Stat icon={CalendarDays} label="Active days" text={`${week.activeDays} / 7`} tone="text-info" />
+            <Stat icon={TrendingUp} label="Toughest solved" text={hardest} tone="text-error" />
           </div>
         </section>
 
@@ -417,30 +584,197 @@ function Dashboard() {
         </section>
       </div>
 
-      {/* Activity */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Weekly momentum */}
+        <section className="surface-card p-6 sm:p-8 lg:col-span-2">
+          <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold">Weekly momentum</h2>
+              <p className="text-sm text-base-content/60">Your submissions, day by day</p>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 rounded-full border border-base-300 py-1 pl-3 pr-1 text-sm">
+                <span className="text-base-content/60">Daily target</span>
+                <button
+                  onClick={() => changeGoal(-1)}
+                  disabled={goal <= 1}
+                  aria-label="Lower daily target"
+                  className="btn btn-ghost btn-xs btn-circle"
+                ><Minus size={14} /></button>
+                <span className="w-4 text-center font-semibold tabular-nums">{goal}</span>
+                <button
+                  onClick={() => changeGoal(1)}
+                  disabled={goal >= 10}
+                  aria-label="Raise daily target"
+                  className="btn btn-ghost btn-xs btn-circle"
+                ><Plus size={14} /></button>
+              </div>
+              <div className="text-right">
+                <p className="flex items-center justify-end gap-1.5 text-sm text-base-content/60"><Target size={14} /> Total this week</p>
+                <p className="text-2xl font-bold tabular-nums">{week.total}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative h-48">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="absolute left-0 right-0 border-t border-base-content/5" style={{ bottom: `${(i / 2) * 100}%` }} />
+            ))}
+            <div
+              className="absolute left-0 right-0 z-0 border-t border-dashed border-warning/70"
+              style={{ bottom: `${(goal / scale) * 100}%`, transition: 'bottom .3s ease' }}
+            >
+              <span className="absolute -top-5 right-0 text-xs text-warning">Target {goal}</span>
+            </div>
+
+            <div className="absolute inset-0 z-10 flex items-end gap-3">
+              {activity.map((n, i) => {
+                const hit = n > 0 && n >= goal;
+                const pct = n ? Math.max(6, (n / scale) * 100) : 3;
+                return (
+                  <div
+                    key={i}
+                    className={`group flex h-full flex-1 items-end rounded-lg px-1 ${i === 6 ? 'bg-base-200/50' : ''}`}
+                  >
+                    <div
+                      tabIndex={0}
+                      aria-label={`${days[i].long}: ${n} submissions`}
+                      className={`relative w-full rounded-t-md outline-none transition-all duration-700 ${
+                        hit ? 'bg-primary' : n ? 'bg-primary/50' : 'bg-base-300'
+                      } group-hover:brightness-125 focus-visible:brightness-125`}
+                      style={{ height: ready ? `${pct}%` : '3%' }}
+                    >
+                      <span className="pointer-events-none absolute -top-9 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md border border-base-300 bg-base-100 px-2 py-1 text-xs opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-within:opacity-100">
+                        {days[i].long}: <b>{n}</b>
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-2 flex gap-3">
+            {activity.map((n, i) => (
+              <div key={i} className="flex-1 text-center">
+                <p className={`text-xs ${i === 6 ? 'font-semibold' : 'text-base-content/60'}`}>{i === 6 ? 'Today' : days[i].short}</p>
+                <p className="text-xs tabular-nums text-base-content/40">{n}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-5 rounded-xl bg-base-200/60 px-4 py-3 text-sm text-base-content/70">
+            {week.total === 0
+              ? 'No submissions this week yet. One solve today starts your streak.'
+              : `You hit your target on ${week.goalHits} of 7 days${
+                  week.bestIdx >= 0 ? `, and ${days[week.bestIdx].short} was your best day with ${week.max}.` : '.'
+                }`}
+          </p>
+        </section>
+
+        {/* Up next */}
+        <section className="surface-card flex flex-col p-6">
+          <h2 className="text-xl font-semibold">Up next</h2>
+          <p className="mb-4 text-sm text-base-content/60">Unsolved problems, ready when you are</p>
+
+          <div className="mb-4 flex flex-wrap gap-2" role="tablist" aria-label="Filter by difficulty">
+            {['all', ...DIFFS].map((f) => (
+              <button
+                key={f}
+                role="tab"
+                aria-selected={queueFilter === f}
+                onClick={() => setQueueFilter(f)}
+                className={`rounded-full border px-3 py-1 text-xs font-medium capitalize transition ${
+                  queueFilter === f
+                    ? 'border-primary bg-primary text-primary-content'
+                    : 'border-base-300 text-base-content/70 hover:border-base-content/30'
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex-1 space-y-2">
+            {loading &&
+              [0, 1, 2].map((i) => <div key={i} className="h-14 animate-pulse rounded-xl bg-base-200" />)}
+
+            {!loading && queue.map((p) => {
+              const d = p.difficulty?.toLowerCase();
+              return (
+                <Link
+                  key={p._id}
+                  to={`/problem/${p._id}`}
+                  className="group flex items-center gap-3 rounded-xl border border-base-300 px-4 py-3 transition hover:border-primary hover:bg-base-200/50"
+                >
+                  <span className="h-8 w-1 shrink-0 rounded-full" style={{ background: COLORS[d] || '#64748b' }} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">{p.title}</span>
+                    <span className="text-xs capitalize text-base-content/50">{d} · +{XP[d] ?? 0} XP</span>
+                  </span>
+                  <ChevronRight size={16} className="shrink-0 text-base-content/30 transition group-hover:translate-x-0.5 group-hover:text-primary" />
+                </Link>
+              );
+            })}
+
+            {!loading && queue.length === 0 && (
+              <div className="rounded-xl border border-dashed border-base-300 p-6 text-center text-sm text-base-content/60">
+                {stats.unsolved.length === 0
+                  ? 'You have solved everything. Check the leaderboard or join a group.'
+                  : `No unsolved ${queueFilter} problems. Pick another difficulty.`}
+              </div>
+            )}
+          </div>
+
+          <Link to="/" className="mt-4 text-sm font-medium text-primary hover:underline">Browse all problems</Link>
+        </section>
+      </div>
+
+      {/* Achievements */}
       <section className="surface-card p-6 sm:p-8">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold">Last 7 days</h2>
-            <p className="text-sm text-base-content/60">Submissions per day</p>
+            <h2 className="text-xl font-semibold">Achievements</h2>
+            <p className="text-sm text-base-content/60">Unlock them by solving and staying consistent</p>
           </div>
-          <div className="text-right">
-            <p className="flex items-center justify-end gap-1.5 text-sm text-base-content/60"><Target size={14} /> This week</p>
-            <p className="text-2xl font-bold">{activity.reduce((a, b) => a + b, 0)}</p>
-          </div>
+          <p className="text-sm text-base-content/60">
+            <span className="text-2xl font-bold text-base-content tabular-nums">{unlocked}</span> / {badges.length} unlocked
+          </p>
         </div>
 
-        <div className="flex h-48 items-end gap-3">
-          {activity.map((n, i) => (
-            <div key={i} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
-              <span className="text-xs text-base-content/60">{n}</span>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {badges.map((b) => {
+            const Icon = b.icon;
+            const pct = Math.min(100, (b.cur / b.need) * 100);
+            return (
               <div
-                className={`w-full rounded-t-md transition-all duration-500 ${n ? 'bg-primary' : 'bg-base-300'}`}
-                style={{ height: `${n ? Math.max(8, (n / maxAct) * 100) : 4}%` }}
-              />
-              <span className={`text-xs ${i === 6 ? 'font-semibold' : 'text-base-content/60'}`}>{days[i]}</span>
-            </div>
-          ))}
+                key={b.id}
+                title={b.desc}
+                className={`rounded-2xl border p-4 transition hover:-translate-y-0.5 ${
+                  b.done ? 'border-primary/40 bg-primary/5' : 'border-base-300 bg-base-200/30'
+                }`}
+              >
+                <div className="mb-3 flex items-center justify-between">
+                  <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${b.done ? 'bg-primary text-primary-content' : 'bg-base-300 text-base-content/50'}`}>
+                    <Icon size={18} />
+                  </span>
+                  {b.done ? <Check size={16} className="text-primary" /> : <Lock size={14} className="text-base-content/30" />}
+                </div>
+                <p className={`text-sm font-semibold ${b.done ? '' : 'text-base-content/80'}`}>{b.title}</p>
+                <p className="mb-3 text-xs text-base-content/50">{b.desc}</p>
+                <div className="h-1.5 overflow-hidden rounded-full bg-base-300">
+                  <div
+                    className={`h-full rounded-full transition-all duration-700 ${b.done ? 'bg-primary' : 'bg-base-content/30'}`}
+                    style={{ width: ready && !b.locked ? `${pct}%` : '0%' }}
+                  />
+                </div>
+                <p className="mt-1.5 text-xs tabular-nums text-base-content/40">
+                  {b.locked ? 'Waiting for problems' : `${Math.min(b.cur, b.need)} / ${b.need}`}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </section>
 
