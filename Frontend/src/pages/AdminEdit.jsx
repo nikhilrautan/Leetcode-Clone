@@ -21,12 +21,17 @@ const problemSchema = z.object({
     output: z.string().min(1, 'Output is required'),
   })).min(1, 'At least one hidden test case required'),
   startCode: z.array(z.object({
-    language: z.enum(['C++', 'Java', 'JavaScript']),
+    language: z.string().optional(),
     initialCode: z.string().min(1, 'Initial code is required'),
   })).length(3, 'All three languages required'),
   referenceSolution: z.array(z.object({
-    language: z.enum(['C++', 'Java', 'JavaScript']),
+    language: z.string().optional(),
     completeCode: z.string().min(1, 'Complete code is required'),
+  })).length(3, 'All three languages required'),
+  driverCode: z.array(z.object({
+    language: z.string().optional(),
+    code: z.string().min(1, 'Driver code is required')
+      .refine((v) => v.includes('{{USER_CODE}}'), 'Driver must contain {{USER_CODE}}'),
   })).length(3, 'All three languages required'),
 });
 
@@ -60,6 +65,10 @@ const byLanguage = (list, field) =>
     [field]: list?.find((x) => x.language?.toLowerCase() === lang.toLowerCase())?.[field] || '',
   }));
 
+// Attach the language name based on position (0 = C++, 1 = Java, 2 = JavaScript)
+const withLanguage = (list) =>
+  list.map((item, i) => ({ ...item, language: languageNames[i] }));
+
 export default function AdminEdit() {
   const { problemId } = useParams();
   const navigate = useNavigate();
@@ -82,7 +91,7 @@ export default function AdminEdit() {
   useEffect(() => {
     (async () => {
       try {
-        // Admin-only endpoint: includes hiddenTestCases
+        // Admin-only endpoint: includes hiddenTestCases and driverCode
         const { data } = await axiosClient.get(`/problem/admin/${problemId}`);
 
         reset({
@@ -98,6 +107,7 @@ export default function AdminEdit() {
           ),
           startCode: byLanguage(data.startCode, 'initialCode'),
           referenceSolution: byLanguage(data.referenceSolution, 'completeCode'),
+          driverCode: byLanguage(data.driverCode, 'code'),
         });
       } catch (err) {
         console.error('Failed to load problem:', err.response?.status, err.response?.data || err.message);
@@ -109,8 +119,15 @@ export default function AdminEdit() {
   }, [problemId, reset]);
 
   const onSubmit = async (data) => {
+    const payload = {
+      ...data,
+      startCode: withLanguage(data.startCode),
+      referenceSolution: withLanguage(data.referenceSolution),
+      driverCode: withLanguage(data.driverCode),
+    };
+
     try {
-      await axiosClient.put(`/problem/update/${problemId}`, data);
+      await axiosClient.put(`/problem/update/${problemId}`, payload);
       alert('Problem updated successfully!');
       navigate('/admin/update');
     } catch (error) {
@@ -118,8 +135,25 @@ export default function AdminEdit() {
     }
   };
 
+  // Shows exactly which fields failed validation
   const onInvalid = (formErrors) => {
-    console.warn('Form validation errors:', formErrors);
+    const lines = [];
+
+    const walk = (node, path) => {
+      if (!node || typeof node !== 'object') return;
+      if (node.message && typeof node.message === 'string') {
+        lines.push(`${path.join(' > ')}: ${node.message}`);
+        return;
+      }
+      Object.keys(node).forEach((key) => {
+        if (key === 'ref') return;
+        const label = /^\d+$/.test(key) && languageNames[key] ? languageNames[key] : key;
+        walk(node[key], [...path, label]);
+      });
+    };
+
+    walk(formErrors, []);
+    alert(lines.length ? lines.join('\n') : 'Some fields are invalid.');
   };
 
   if (loading) {
@@ -318,21 +352,17 @@ export default function AdminEdit() {
           {/* Code templates */}
           <Section
             title="Code templates"
-            description="Starter code and a full reference solution for each language. Both must read input from stdin and print the result."
+            description="For each language: the function stub users see, the solved function, and the hidden driver that reads input, calls the function and prints the result."
           >
-            <div className="space-y-8">
+            <div className="space-y-10">
               {[0, 1, 2].map((index) => (
                 <div key={index} className="space-y-4">
                   <span className="badge badge-soft badge-primary font-medium">
                     {languageNames[index]}
                   </span>
 
-                  {/* Keep the language values in the submitted data */}
-                  <input type="hidden" {...register(`startCode.${index}.language`)} />
-                  <input type="hidden" {...register(`referenceSolution.${index}.language`)} />
-
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium">Initial code</label>
+                    <label className="mb-1.5 block text-sm font-medium">Initial code (function stub users see)</label>
                     <textarea
                       {...register(`startCode.${index}.initialCode`)}
                       spellCheck={false}
@@ -343,7 +373,7 @@ export default function AdminEdit() {
                   </div>
 
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium">Reference solution</label>
+                    <label className="mb-1.5 block text-sm font-medium">Reference solution (solved function only)</label>
                     <textarea
                       {...register(`referenceSolution.${index}.completeCode`)}
                       spellCheck={false}
@@ -351,6 +381,21 @@ export default function AdminEdit() {
                       className="textarea textarea-bordered w-full bg-base-300 font-mono text-sm leading-relaxed"
                     />
                     <FieldError message={errors.referenceSolution?.[index]?.completeCode?.message} />
+                  </div>
+
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium">Driver code (hidden from users)</label>
+                    <p className="mb-1.5 text-xs text-base-content/60">
+                      Reads the input, calls the user's function and prints the result.
+                      Must contain {'{{USER_CODE}}'} exactly where the user's code goes.
+                    </p>
+                    <textarea
+                      {...register(`driverCode.${index}.code`)}
+                      spellCheck={false}
+                      rows={10}
+                      className="textarea textarea-bordered w-full bg-base-300 font-mono text-sm leading-relaxed"
+                    />
+                    <FieldError message={errors.driverCode?.[index]?.code?.message} />
                   </div>
                 </div>
               ))}
