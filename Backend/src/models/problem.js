@@ -73,6 +73,12 @@ const problemSchema = new Schema({
             }
         }
     ],
+        driverCode: [
+        {
+            language: { type: String, required: true },
+            code: { type: String, required: true }   // must contain {{USER_CODE}}
+        }
+    ],
 
     problemCreator: {
         type: Schema.Types.ObjectId,

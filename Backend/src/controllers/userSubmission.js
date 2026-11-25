@@ -2,6 +2,7 @@ const Problem = require("../models/problem");
 const Submission = require("../models/submission");
 const User = require("../models/user");
 const { getLanguageById, submitBatch, submitToken } = require("../utils/problemUtility");
+const buildSource = require("../utils/buildSource");
 
 // Readable reason for a failed Judge0 test result
 const describeFailure = (test) =>
@@ -46,7 +47,7 @@ const submitCode = async (req, res) => {
     const languageId = getLanguageById(language);
 
     const submissions = problem.hiddenTestCases.map((testcase) => ({
-      source_code: code,
+      source_code: buildSource(problem.driverCode, language, code),
       language_id: languageId,
       stdin: testcase.input,
       expected_output: testcase.output
@@ -168,7 +169,7 @@ const runCode = async (req, res) => {
     const languageId = getLanguageById(language);
 
     const submissions = problem.visibleTestCases.map((testcase) => ({
-      source_code: code,
+      source_code: buildSource(problem.driverCode, language, code),
       language_id: languageId,
       stdin: testcase.input,
       expected_output: testcase.output

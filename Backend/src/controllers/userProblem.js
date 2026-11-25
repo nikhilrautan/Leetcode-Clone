@@ -3,10 +3,11 @@ const Problem = require("../models/problem");
 const User = require("../models/user");
 const Submission = require("../models/submission");
 const SolutionVideo = require("../models/solutionVideo")
+const buildSource = require("../utils/buildSource");
 
 // Runs every reference solution against the visible test cases on Judge0.
 // Returns null if everything passes, otherwise a readable error message.
-const verifyReferenceSolutions = async (referenceSolution, visibleTestCases) => {
+const verifyReferenceSolutions = async (referenceSolution, visibleTestCases, driverCode) => {
 
   if (!Array.isArray(visibleTestCases) || visibleTestCases.length === 0)
     return "At least one visible test case is required";
@@ -17,10 +18,10 @@ const verifyReferenceSolutions = async (referenceSolution, visibleTestCases) => 
   for (const { language, completeCode } of referenceSolution) {
 
     const languageId = getLanguageById(language);
+    const fullCode = buildSource(driverCode, language, completeCode);
 
-    // Batch submission: one entry per visible test case
     const submissions = visibleTestCases.map((testcase) => ({
-      source_code: completeCode,
+      source_code: fullCode,
       language_id: languageId,
       stdin: testcase.input,
       expected_output: testcase.output
@@ -50,7 +51,7 @@ const createProblem = async (req, res) => {
     if (!Array.isArray(hiddenTestCases) || hiddenTestCases.length === 0)
       return res.status(400).send("At least one hidden test case is required");
 
-    const verifyError = await verifyReferenceSolutions(referenceSolution, visibleTestCases);
+    const verifyError = await verifyReferenceSolutions(referenceSolution, visibleTestCases, req.body.driverCode);
     if (verifyError)
       return res.status(400).send(verifyError);
 
@@ -86,9 +87,10 @@ const updateProblem = async (req, res) => {
 
     // Use the new values if sent, otherwise the ones already saved
     const verifyError = await verifyReferenceSolutions(
-      referenceSolution ?? DsaProblem.referenceSolution,
-      visibleTestCases ?? DsaProblem.visibleTestCases
-    );
+  referenceSolution ?? DsaProblem.referenceSolution,
+  visibleTestCases ?? DsaProblem.visibleTestCases,
+  req.body.driverCode ?? DsaProblem.driverCode
+);
     if (verifyError)
       return res.status(400).send(verifyError);
 
