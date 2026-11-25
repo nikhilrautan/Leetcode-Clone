@@ -23,6 +23,8 @@ import Group from "./pages/Group";
 import Leaderboard from "./pages/Leaderboard";
 import Landing from "./pages/Landing";
 import GroupDetail from "./pages/GroupDetail";
+import AdminUpdate from './pages/AdminUpdate';
+import AdminEdit from './pages/AdminEdit';
 
 function App() {
   const dispatch = useDispatch();
@@ -60,6 +62,8 @@ function App() {
         <Route path="/feed" element={<Feed />} />
         <Route path="/group/:id" element={<GroupDetail />} />
         <Route path="/algo-visualiser" element={<AlgoVisualiser />} />
+        <Route path="/admin/update" element={/* same admin guard as /admin/delete */ <AdminUpdate />} />
+        <Route path="/admin/update/:problemId" element={/* same admin guard */ <AdminEdit />} />
         <Route path="/group" element={<Group />} />
         <Route path="/goals" element={<Goals />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
